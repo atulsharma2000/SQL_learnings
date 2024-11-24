@@ -1,0 +1,1474 @@
+
+
+======= SQL Functions ===========
+
+DUAL table  <- its a Virtual table, generally used to compelete select query, its optional.
+
+1.  NOW()  function
+
+----------------------------------------
+mysql> select NOW();
++---------------------+
+| NOW()               |
++---------------------+
+| 2024-11-18 14:31:32 |
++---------------------+
+1 row in set (0.01 sec)
+
+
+  
+mysql> select NOW() from DUAL;
++---------------------+
+| NOW()               |
++---------------------+
+| 2024-11-18 14:31:58 |
++---------------------+
+1 row in set (0.00 sec)
+
+---------------------------------------------
+mysql> select 2*2;
++-----+
+| 2*2 |
++-----+
+|   4 |
++-----+
+1 row in set (0.00 sec)
+
+mysql> select 2*2 from Dual;
++-----+
+| 2*2 |
++-----+
+|   4 |
++-----+
+1 row in set (0.00 sec)
+================================================================
+
+
+>> HELP
+
+mysql> HELP Function;
+Many help items for your request exist.
+To make a more specific request, please type 'help <item>',
+where <item> is one of the following
+topics:
+   ALTER FUNCTION
+   CREATE FUNCTION
+   CREATE FUNCTION LOADABLE FUNCTION
+   CREATE PROCEDURE
+   DROP FUNCTION
+   DROP FUNCTION LOADABLE FUNCTION
+   DROP PROCEDURE
+   REPLACE FUNCTION
+   SHOW
+   SHOW CREATE FUNCTION
+   SHOW FUNCTION CODE
+   SHOW FUNCTION STATUS
+   TIME FUNCTION
+   TIMESTAMP FUNCTION
+   
+   
+mysql> HELP Functions;                              (we use it mostly)
+You asked for help about help category: "Functions"
+For more information, type 'help <item>', where <item> is one of the following
+categories:
+   Aggregate Functions and Modifiers
+   Bit Functions
+   Cast Functions and Operators
+   Comparison Operators
+   Date and Time Functions
+   Encryption Functions
+   Enterprise Encryption Functions
+   Flow Control Functions
+   GROUP BY Functions and Modifiers
+   GTID
+   Information Functions
+   Internal Functions
+   Locking Functions
+   Logical Operators
+   Miscellaneous Functions
+   Numeric Functions
+   Performance Schema Functions
+   Spatial Functions
+   String Functions
+   Window Functions
+   XML
+
+==================================================================
+
+mysql> help Numeric Functions
+
+You asked for help about help category: "Numeric Functions"
+For more information, type 'help <item>', where <item> is one of the following
+topics:
+   %
+   *
+   +
+   - BINARY
+   - UNARY
+   /
+   ABS
+   ACOS
+   ASIN
+   ATAN
+   ATAN2
+   CEIL
+   CEILING
+   CONV
+   COS
+   COT
+   CRC32
+   DEGREES
+   DIV
+   EXP
+   FLOOR
+   LN
+   LOG
+   LOG10
+   LOG2
+   MOD
+   PI
+   POW
+   POWER
+   RADIANS
+   RAND
+   ROUND
+   SIGN
+   SIN
+   SQRT
+   TAN
+   TRUNCATE
+
+
+
+>> mysql> help pow;
+
+mysql> select pow(2,-2);
++-----------+
+| pow(2,-2) |
++-----------+
+|      0.25 |
++-----------+
+1 row in set (0.00 sec)
+
+
+--------------------------------------------------
+>> mysql> help round;
+mysql> select round(3.5);
++------------+
+| round(3.5) |
++------------+
+|          4 |
++------------+
+1 row in set (0.00 sec)
+
+
+
+>> mysql> select round(123.5251,1);
++-------------------+
+| round(123.5251,1) |
++-------------------+
+|             123.5 |
++-------------------+
+1 row in set (0.00 sec)
+
+mysql> select round(123.25,1);
++-----------------+
+| round(123.25,1) |
++-----------------+
+|           123.3 |
++-----------------+
+1 row in set (0.00 sec)
+
+
+mysql> select round(123.258,2);
++------------------+
+| round(123.258,2) |
++------------------+
+|           123.26 |
++------------------+
+1 row in set (0.00 sec)
+
+
+Display all price with 2 decimal values.
+
+mysql> select round(price,2) from books;
++----------------+
+| round(price,2) |
++----------------+
+|         123.46 |
+|         371.02 |
+|         334.21 |
+|         140.12 |
+|         367.76 |
+|         570.66 |
+|         937.21 |
+|         475.12 |
+|         525.65 |
+|         408.24 |
+|         517.39 |
+|         371.94 |
+|         302.82 |
++----------------+
+13 rows in set (0.00 sec)
+
+
+---------------------------------------------------------------
+
+it gets nearest tens value
+
+mysql> select round(123,-1);
++---------------+
+| round(123,-1) |
++---------------+
+|           120 |
++---------------+
+1 row in set (0.00 sec)
+
+
+mysql> select round(125,-1);
++---------------+
+| round(125,-1) |
++---------------+
+|           130 |
++---------------+
+1 row in set (0.00 sec)
+
+
+----nearest 100th value---------
+m
+ysql> select round(157,-2);
++---------------+
+| round(157,-2) |
++---------------+
+|           200 |
++---------------+
+1 row in set (0.00 sec)
+
+mysql> select round(123,-2);
++---------------+
+| round(123,-2) |
++---------------+
+|           100 |
++---------------+
+1 row in set (0.00 sec)
+
+mysql> select round(23,-2);
++--------------+
+| round(23,-2) |
++--------------+
+|            0 |
++--------------+
+1 row in set (0.00 sec)
+
+--------------
+
+mysql> select round(price,-1) from books;
++-----------------+
+| round(price,-1) |
++-----------------+
+|             120 |
+|             370 |
+|             330 |
+|             140 |
+|             370 |
+|             570 |
+|             940 |
+|             480 |
+|             530 |
+|             410 |
+|             520 |
+|             370 |
+|             300 |
++-----------------+
+13 rows in set (0.00 sec)
+
+mysql> select round(price,-2) from books;
++-----------------+
+| round(price,-2) |
++-----------------+
+|             100 |
+|             400 |
+|             300 |
+|             100 |
+|             400 |
+|             600 |
+|             900 |
+|             500 |
+|             500 |
+|             400 |
+|             500 |
+|             400 |
+|             300 |
++-----------------+
+13 rows in set (0.01 sec)
+
+
+======================================================
+
+
+Ceil()  == Ceiling()
+- returns the smalled integer value not less than X
+
+mysql> select ceil(price) from books;
++-------------+
+| ceil(price) |
++-------------+
+|         124 |
+|         372 |
+|         335 |
+|         141 |
+|         368 |
+|         571 |
+|         938 |
+|         476 |
+|         526 |
+|         409 |
+|         518 |
+|         372 |
+|         303 |
++-------------+
+13 rows in set (0.00 sec)
+
+
+Floor() 
+- Returns the largest integer value not greater than X. Returns NULL if X
+is NULL.
+
+mysql> select floor(price) from books;
++--------------+
+| floor(price) |
++--------------+
+|          123 |
+|          371 |
+|          334 |
+|          140 |
+|          367 |
+|          570 |
+|          937 |
+|          475 |
+|          525 |
+|          408 |
+|          517 |
+|          371 |
+|          302 |
++--------------+
+13 rows in set (0.00 sec)
+
+
+----------------------------------------------------------
+
+
+mysql> select truncate(1.2232,2);
++--------------------+
+| truncate(1.2232,2) |
++--------------------+
+|               1.22 |
++--------------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT PI();
+        -> 3.141593
+
+
+mysql> select cos(45);
++--------------------+
+| cos(45)            |
++--------------------+
+| 0.5253219888177297 |
++--------------------+
+1 row in set (0.00 sec)
+
+------------------------------------------------
+
+---------String Functions-----------------
+
+mysql> help string functions;
+You asked for help about help category: "String Functions"
+For more information, type 'help <item>', where <item> is one of the following
+topics:
+   ASCII
+   BIN
+   BIT_LENGTH
+   CHAR FUNCTION
+   CHARACTER_LENGTH
+   CHAR_LENGTH
+   CONCAT
+   CONCAT_WS
+   ELT
+   EXPORT_SET
+   FIELD
+   FIND_IN_SET
+   FORMAT
+   FROM_BASE64
+   HEX
+   INSERT FUNCTION
+   INSTR
+   LCASE
+   LEFT
+   LENGTH
+   LIKE
+   LOAD_FILE
+   LOCATE
+   LOWER
+   LPAD
+   LTRIM
+   MAKE_SET
+   MATCH AGAINST
+   MID
+   NOT LIKE
+   NOT REGEXP
+   OCT
+   OCTET_LENGTH
+   ORD
+   POSITION
+   QUOTE
+   REGEXP
+   REGEXP_INSTR
+   REGEXP_LIKE
+   REGEXP_REPLACE
+   REGEXP_SUBSTR
+   REPEAT FUNCTION
+   REPLACE FUNCTION
+   REVERSE
+   RIGHT
+   RPAD
+   RTRIM
+   SOUNDEX
+   SOUNDS LIKE
+   SPACE
+   STRCMP
+   SUBSTR
+   SUBSTRING
+   SUBSTRING_INDEX
+   TO_BASE64
+   TRIM
+   UCASE
+   UNHEX
+   UPPER
+   WEIGHT_STRING
+
+
+
+--------Concat  (comma seperated concatination) ---------------
+mysql> SELECT CONCAT('My', 'S', 'QL');
+        -> 'MySQL'
+mysql> SELECT CONCAT('My', NULL, 'QL');
+        -> NULL
+mysql> SELECT CONCAT(14.3);
+        -> '14.3'
+        
+mysql> select  concat(14.4,23,1.1);
++---------------------+
+| concat(14.4,23,1.1) |
++---------------------+
+| 14.4231.1           |
++---------------------+
+1 row in set (0.00 sec)
+
+mysql> select  concat(14.4,23,1);
++-------------------+
+| concat(14.4,23,1) |
++-------------------+
+| 14.4231           |
++-------------------+
+1 row in set (0.00 sec)
+
+mysql> select  concat("vlr",".","gg");
++------------------------+
+| concat("vlr",".","gg") |
++------------------------+
+| vlr.gg                 |
++------------------------+
+1 row in set (0.00 sec)
+
+
+mysql> select concat(empno,"-",ename) `id-name` from emp;
++-------------+
+| id-name     |
++-------------+
+| 7369-SMITH  |
+| 7499-ALLEN  |
+| 7521-WARD   |
+| 7566-JONES  |
+| 7654-MARTIN |
+| 7698-BLAKE  |
+| 7782-CLARK  |
+| 7788-SCOTT  |
+| 7839-KING   |
+| 7844-TURNER |
+| 7876-ADAMS  |
+| 7900-JAMES  |
+| 7902-FORD   |
+| 7934-MILLER |
+| 1-B         |
+| 2-J         |
+| 3-K         |
++-------------+
+17 rows in set (0.00 sec)
+
+
+mysql> select concat(ename," IS ","WORKING AS ",job," IN ","DEPTno ",deptno) as sentence  from emp;
+
+
+----------LOWER function -----------
+
+mysql> select lower(concat(ename," is ","working as ",job," in ","deptno ",deptno)) from emp;
+
+
+mysql> select  lower(ename),upper(job) from emp;
+
+--------------------------------------
+
+LEFT(str,len)
+
+Returns the leftmost len characters from the string str, or NULL if any
+argument is NULL.
+
+mysql> SELECT LEFT('foobarbar', 5);
+        -> 'fooba'
+
+
+----------------------------
+
+RIGHT(str,len)
+
+Returns the rightmost len characters from the string str, or NULL if
+any argument is NULL.
+
+Examples:
+mysql> SELECT RIGHT('foobarbar', 4);
+        -> 'rbar'
+
+
+> Display all initial letter of enames
+mysql> select left(ename,1) from emp;
+
+
+> display all the emps whose first letter of name falls in the range of b and j
+
+mysql> select ename from emp where left(ename,1) between "B" and "J";
++-------+
+| ename |
++-------+
+| JONES |
+| BLAKE |
+| CLARK |
+| JAMES |
+| FORD  |
+| B     |
+| J     |
++-------+
+7 rows in set (0.00 sec)
+
+
+
+--------------SubString----------------------
+
+
+Examples:
+mysql> SELECT SUBSTRING('Quadratically',5);
+        -> 'ratically'
+mysql> SELECT SUBSTRING('foobarbar' FROM 4);
+        -> 'barbar'
+mysql> SELECT SUBSTRING('Quadratically',5,6);
+        -> 'ratica'
+mysql> SELECT SUBSTRING('Sakila', -3);
+        -> 'ila'
+mysql> SELECT SUBSTRING('Sakila', -5, 3);
+        -> 'aki'
+mysql> SELECT SUBSTRING('Sakila' FROM -4 FOR 2);
+        -> 'ki'
+
+mysql> select substring("hello",2,3);
++------------------------+
+| substring("hello",2,3) |
++------------------------+
+| ell                    |
++------------------------+
+1 row in set (0.00 sec)
+
+
+mysql> select substring("hello",-3);
++-----------------------+
+| substring("hello",-3) |
++-----------------------+
+| llo                   |
++-----------------------+
+1 row in set (0.00 sec)
+
+mysql> select substring("hello",-1);
++-----------------------+
+| substring("hello",-1) |
++-----------------------+
+| o                     |
++-----------------------+
+1 row in set (0.00 sec)
+
+
+mysql> select substring("hello" from -4 for 2);
++----------------------------------+
+| substring("hello" from -4 for 2) |
++----------------------------------+
+| el                               |
++----------------------------------+
+1 row in set (0.00 sec)
+
+
+mysql> select substring("awesome",-4);
++-------------------------+
+| substring("awesome",-4) |
++-------------------------+
+| some                    |
++-------------------------+
+1 row in set (0.00 sec)
+
+-----------------------Length---------------------------
+
+Returns the length of the string str, measured in bytes. A multibyte
+character counts as multiple bytes. This means that for a string
+containing five 2-byte characters, LENGTH() returns 10, whereas
+CHAR_LENGTH() returns 5. Returns NULL if str is NULL.
+
+
+
+mysql> SELECT LENGTH('text');
+        -> 4
+ 
+mysql> select length("atul");
++----------------+
+| length("atul") |
++----------------+
+|              4 |
++----------------+
+1 row in set (0.00 sec)
+
+
+-----------------------Trim-----------------------------------
+
+Syntax:
+TRIM([{BOTH | LEADING | TRAILING} [remstr] FROM] str), TRIM([remstr
+FROM] str)
+
+Returns the string str with all remstr prefixes or suffixes removed. If
+none of the specifiers BOTH, LEADING, or TRAILING is given, BOTH is
+assumed. remstr is optional and, if not specified, spaces are removed.
+
+
+   Examples:
+mysql> SELECT TRIM('  bar   ');
+        -> 'bar'
+mysql> SELECT TRIM(LEADING 'x' FROM 'xxxbarxxx');
+        -> 'barxxx'
+mysql> SELECT TRIM(BOTH 'x' FROM 'xxxbarxxx');
+        -> 'bar'
+mysql> SELECT TRIM(TRAILING 'xyz' FROM 'barxxyz');
+        -> 'barx'
+
+mysql> select trim(Leading 'a' from "atul");
++-------------------------------+
+| trim(Leading 'a' from "atul") |
++-------------------------------+
+| tul                           |
++-------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select trim(both 'a' from "aatula");
++------------------------------+
+| trim(both 'a' from "aatula") |
++------------------------------+
+| tul                          |
++------------------------------+
+1 row in set (0.00 sec)
+
+
+mysql> select trim(trailing 'a' from "aatula");
++----------------------------------+
+| trim(trailing 'a' from "aatula") |
++----------------------------------+
+| aatul                            |
++----------------------------------+
+1 row in set (0.00 sec)
+
+
+
+--------------------- LPAD---------------
+
+Examples:
+mysql> SELECT LPAD('hi',4,'??');
+        -> '??hi'
+mysql> SELECT LPAD('hi',1,'??');
+        -> 'h'
+
+mysql> select LPAD('hi',4,"?");
++------------------+
+| LPAD('hi',4,"?") |
++------------------+
+| ??hi             |
++------------------+
+1 row in set (0.01 sec)
+
+mysql> select LPAD('hi',1,"?");
++------------------+
+| LPAD('hi',1,"?") |
++------------------+
+| h                |
++------------------+
+1 row in set (0.00 sec)
+
+
+    
+      
+
+	RPAD
+	
+
+Examples:
+mysql> SELECT RPAD('hi',5,'?');
+        -> 'hi???'
+mysql> SELECT RPAD('hi',1,'?');
+        -> 'h'
+
+
+mysql> select RPAD('atul',5,"?");
++--------------------+
+| RPAD('atul',5,"?") |
++--------------------+
+| atul?              |
++--------------------+
+1 row in set (0.00 sec)
+
+
+mysql> select RPAD(upper("THIS shit IS so BORRRRRRRRRRRRING "),50,"han");
+
+
+
+ques. Provide the behaviour of the LPAD similar to the LEFT
+mysql> select lpad("foobarbar",4,"");
++------------------------+
+| lpad("foobarbar",4,"") |
++------------------------+
+| foob                   |
++------------------------+
+1 row in set (0.00 sec)
+
+
+mysql> select lpad("8365",12,"X");
++---------------------+
+| lpad("8365",12,"X") |
++---------------------+
+| XXXXXXXX8365        |
++---------------------+
+1 row in set (0.00 sec)
+
+
+
+----------- Display mobile 
+
+mysql> select concat(left('8973049388',2),"XXXXXX", RiGHT("8983049388",2)) as mob;
++------------+
+| mob        |
++------------+
+| 89XXXXXX88 |
++------------+
+1 row in set (0.00 sec)
+
+
+mysql> select rpad(rpad(left("8809090289",2),8,"X"),10,right("8809090289",2)) as r;
++------------+
+| r          |
++------------+
+| 88XXXXXX89 |
++------------+
+1 row in set (0.00 sec)
+
+
+mysql> select lpad(lpad("88",8,"X"),10,"89");
++--------------------------------+
+| lpad(lpad("88",8,"X"),10,"89") |
++--------------------------------+
+| 89XXXXXX88                     |
++--------------------------------+
+1 row in set (0.00 sec)
+
+
+-----------------------------
+
+display ****sunbeam****
+
+mysql> select lpad(rpad("Sunbeam",11,"*"),15,"*");
++-------------------------------------+
+| lpad(rpad("Sunbeam",11,"*"),15,"*") |
++-------------------------------------+
+| ****Sunbeam****                     |
++-------------------------------------+
+1 row in set (0.00 sec)
+
+
+mysql> select rpad(lpad("Sunbeam",11,"*"),15,"*");
++-------------------------------------+
+| rpad(lpad("Sunbeam",11,"*"),15,"*") |
++-------------------------------------+
+| ****Sunbeam****                     |
++-------------------------------------+
+1 row in set (0.00 sec)
+
+
+
+-------------------------------
+
+missing date 
+
+
+
+
+
+
+HELP Date and Time Functions;
+SELECT NOW();
+SELECT SYSDATE();
+-- not to take if understanding is low
+SELECT NOW(),SLEEP(5),SYSDATE();
+SELECT DATE("2000-01-01 11:10:20");
+SELECT TIME("2000-01-01 11:10:20");
+SELECT DATE(NOW());
+SELECT TIME(NOW());
+SELECT DATE_ADD(NOW(),INTERVAL 4 DAY);
+SELECT DATE_ADD(NOW(),INTERVAL 1 MONTH);
+SELECT DATEDIFF(NOW(),"2023-01-01");
+--return no of days
+SELECT TIMESTAMPDIFF(MONTH,"2023-01-01",NOW());
+-- dispaly the exact experiance of emps in terms of year and months
+SELECT empno,ename,sal,TIMESTAMPDIFF(YEAR,hire,NOW()) AS years FROM emp;
+SELECT empno,ename,sal,TIMESTAMPDIFF(YEAR,hire,NOW())%12 AS months FROM emp;
+SELECT empno,ename,sal,TIMESTAMPDIFF(YEAR,hire,NOW()) AS
+years,TIMESTAMPDIFF(YEAR,hire,NOW())%12 AS months FROM emp;
+
+
+
+
+
+
+
+
+
+
+
+mysql> select Date(date(now()));
++-------------------+
+| Date(date(now())) |
++-------------------+
+| 2024-11-18        |
++-------------------+
+1 row in set (0.00 sec)
+
+mysql> select Date_ADD(date(now()),interval 31 year);
++----------------------------------------+
+| Date_ADD(date(now()),interval 31 year) |
++----------------------------------------+
+| 2055-11-18                             |
++----------------------------------------+
+1 row in set (0.00 sec)
+
+
+Examples:
+mysql> SELECT DATE_ADD('2018-05-01',INTERVAL 1 DAY);
+        -> '2018-05-02'
+mysql> SELECT DATE_SUB('2018-05-01',INTERVAL 1 YEAR);
+        -> '2017-05-01'
+mysql> SELECT DATE_ADD('2020-12-31 23:59:59',
+    ->                 INTERVAL 1 SECOND);
+        -> '2021-01-01 00:00:00'
+mysql> SELECT DATE_ADD('2018-12-31 23:59:59',
+    ->                 INTERVAL 1 DAY);
+        -> '2019-01-01 23:59:59'
+mysql> SELECT DATE_ADD('2100-12-31 23:59:59',
+    ->                 INTERVAL '1:1' MINUTE_SECOND);
+        -> '2101-01-01 00:01:00'
+mysql> SELECT DATE_SUB('2025-01-01 00:00:00',
+    ->                 INTERVAL '1 1:1:1' DAY_SECOND);
+        -> '2024-12-30 22:58:59'
+mysql> SELECT DATE_ADD('1900-01-01 00:00:00',
+    ->                 INTERVAL '-1 10' DAY_HOUR);
+        -> '1899-12-30 14:00:00'
+mysql> SELECT DATE_SUB('1998-01-02', INTERVAL 31 DAY);
+        -> '1997-12-02'
+mysql> SELECT DATE_ADD('1992-12-31 23:59:59.000002',
+    ->            INTERVAL '1.999999' SECOND_MICROSECOND);
+        -> '1993-01-01 00:00:01.000001'
+
+
+
+Examples:
+mysql> SELECT ADDDATE('2008-01-02', 31);
+        -> '2008-02-02'
+
+
+
+
+
+--------------------------------
+
+mysql> SELECT DATE_add('1998-01-02', INTERVAL 31 DAY);
++-----------------------------------------+
+| DATE_add('1998-01-02', INTERVAL 31 DAY) |
++-----------------------------------------+
+| 1998-02-02                              |
++-----------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT DATE_SUB('1998-01-02', INTERVAL 31 DAY);
++-----------------------------------------+
+| DATE_SUB('1998-01-02', INTERVAL 31 DAY) |
++-----------------------------------------+
+| 1997-12-02                              |
++-----------------------------------------+
+1 row in set (0.00 sec)
+
+
+---------------------------------------------------------------
+
+IMPORTANT for exam  ( see the changes )
+
+
+mysql> SELECT DATE_add('2020-12-31 23:59:59', INTERVAL 1 second);
++----------------------------------------------------+
+| DATE_add('2020-12-31 23:59:59', INTERVAL 1 second) |
++----------------------------------------------------+
+| 2021-01-01 00:00:00                                |
++----------------------------------------------------+
+1 row in set (0.00 sec)
+
+
+---------------------------------------------------------------------
+
+subtract
+
+mysql> SELECT DATE_sub('2020-12-31 00:00:00', INTERVAL 1 second);
++----------------------------------------------------+
+| DATE_sub('2020-12-31 00:00:00', INTERVAL 1 second) |
++----------------------------------------------------+
+| 2020-12-30 23:59:59                                |
++----------------------------------------------------+
+1 row in set (0.00 sec)
+
+
+
+---------------------------
+
+mysql> SELECT DATE_add('2020-12-31 23:59:59', INTERVAL '1:1' MINUTE_SECOND);
++---------------------------------------------------------------+
+| DATE_add('2020-12-31 23:59:59', INTERVAL '1:1' MINUTE_SECOND) |
++---------------------------------------------------------------+
+| 2021-01-01 00:01:00                                           |
++---------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+---------------------------------
+
+
+mysql> SELECT DATE_add('1900-01-01 00:00:00', INTERVAL '-1 10' DAY_HOUR);
++------------------------------------------------------------+
+| DATE_add('1900-01-01 00:00:00', INTERVAL '-1 10' DAY_HOUR) |
++------------------------------------------------------------+
+| 1899-12-30 14:00:00                                        |
++------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+------------------------------------------------
+
+
+
+mysql> SELECT DATE_sub('2025-01-01 00:00:00', INTERVAL '1 1:1:1' DAY_SECOND);
++----------------------------------------------------------------+
+| DATE_sub('2025-01-01 00:00:00', INTERVAL '1 1:1:1' DAY_SECOND) |
++----------------------------------------------------------------+
+| 2024-12-30 22:58:59                                            |
++----------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+
+---------------------------------------------
+
+
+TIMESTAMPDIFF(unit,datetime_expr1,datetime_expr2)
+
+Returns datetime_expr2 − datetime_expr1, where datetime_expr1 and
+datetime_expr2 are date or datetime expressions. One expression may be
+a date and the other a datetime; a date value is treated as a datetime
+having the time part '00:00:00' where necessary. The unit for the
+result (an integer) is given by the unit argument. The legal values for
+unit are the same as those listed in the description of the
+TIMESTAMPADD() function.
+
+
+mysql> SELECT TIMESTAMPDIFF(MONTH,'2003-02-01','2003-05-01');
+        -> 3
+mysql> SELECT TIMESTAMPDIFF(YEAR,'2002-05-01','2001-01-01');
+        -> -1
+mysql> SELECT TIMESTAMPDIFF(MINUTE,'2003-02-01','2003-05-01 12:05:55');
+        -> 128885
+
+
+
+- Display experience of employees in years and months
+
+
+
+mysql> select timestampdiff(year,hire,date(now())) exp_in_year,timestampdiff(month,hire,date(now())) exp_in_month  from emp;
++-------------+--------------+
+| exp_in_year | exp_in_month |
++-------------+--------------+
+|          43 |          527 |
+|          43 |          524 |
+|          43 |          524 |
+|          43 |          523 |
+|          43 |          517 |
+|          43 |          522 |
+|          43 |          521 |
+|          41 |          503 |
+|          43 |          516 |
+|          43 |          518 |
+|          41 |          502 |
+|          42 |          515 |
+|          42 |          515 |
+|          42 |          513 |
+|        NULL |         NULL |
+|        NULL |         NULL |
+|        NULL |         NULL |
++-------------+--------------+
+17 rows in set (0.00 sec)
+
+
+mysql> select timestampdiff(year,hire,date(now())) Year_EXP,(timestampdiff(month,hire,date(now()))%12)   Months_EXP  from emp;
++----------+------------+
+| Year_EXP | Months_EXP |
++----------+------------+
+|       43 |         11 |
+|       43 |          8 |
+|       43 |          8 |
+|       43 |          7 |
+|       43 |          1 |
+|       43 |          6 |
+|       43 |          5 |
+|       41 |         11 |
+|       43 |          0 |
+|       43 |          2 |
+|       41 |         10 |
+|       42 |         11 |
+|       42 |         11 |
+|       42 |          9 |
+|     NULL |       NULL |
+|     NULL |       NULL |
+|     NULL |       NULL |
++----------+------------+
+17 rows in set (0.00 sec)
+
+
+mysql> select ename, timestampdiff(year,hire,date(now())) Years,(timestampdiff(month,hire,date(now()))%12)   Months  from emp;
++--------+-------+--------+
+| ename  | Years | Months |
++--------+-------+--------+
+| SMITH  |    43 |     11 |
+| ALLEN  |    43 |      8 |
+| WARD   |    43 |      8 |
+| JONES  |    43 |      7 |
+| MARTIN |    43 |      1 |
+| BLAKE  |    43 |      6 |
+| CLARK  |    43 |      5 |
+| SCOTT  |    41 |     11 |
+| KING   |    43 |      0 |
+| TURNER |    43 |      2 |
+| ADAMS  |    41 |     10 |
+| JAMES  |    42 |     11 |
+| FORD   |    42 |     11 |
+| MILLER |    42 |      9 |
+| B      |  NULL |   NULL |
+| J      |  NULL |   NULL |
+| K      |  NULL |   NULL |
++--------+-------+--------+
+17 rows in set (0.00 sec)
+
+
+
+--------------------------------------
+
+
+mysql> select Date(now()),Time(now()),Day(now()),month(now()),year(now());
++-------------+-------------+------------+--------------+-------------+
+| Date(now()) | Time(now()) | Day(now()) | month(now()) | year(now()) |
++-------------+-------------+------------+--------------+-------------+
+| 2024-11-18  | 17:54:56    |         18 |           11 |        2024 |
++-------------+-------------+------------+--------------+-------------+
+1 row in set (0.00 sec)
+
+
+-------------------------------------------------------------
+
+mysql> select * from emp where year(hire) = 1982;
++-------+--------+---------+------+------------+---------+------+--------+
+| empno | ename  | job     | mgr  | hire       | sal     | comm | deptno |
++-------+--------+---------+------+------------+---------+------+--------+
+|  7788 | SCOTT  | ANALYST | 7566 | 1982-12-09 | 3000.00 | NULL |     20 |
+|  7934 | MILLER | CLERK   | 7782 | 1982-01-23 | 1300.00 | NULL |     10 |
++-------+--------+---------+------+------------+---------+------+--------+
+2 rows in set (0.00 sec)
+
+--------------------------------------------------------------
+
+======================== Flow Control Functions ===========
+
+
+mysql> help flow control functions;
+You asked for help about help category: "Flow Control Functions"
+For more information, type 'help <item>', where <item> is one of the following
+topics:
+   CASE OPERATOR
+   IF FUNCTION
+   IFNULL
+   NULLIF
+
+
+
+-------- case operator
+
+Syntax:
+CASE value WHEN compare_value THEN result [WHEN compare_value THEN
+result ...] [ELSE result] END
+
+CASE WHEN condition THEN result [WHEN condition THEN result ...] [ELSE
+result] END
+
+The first CASE syntax returns the result for the first
+value=compare_value comparison that is true. The second syntax returns
+the result for the first condition that is true. If no comparison or
+condition is true, the result after ELSE is returned, or NULL if there
+is no ELSE part.
+
+
+
+Examples:
+mysql> SELECT CASE 1 WHEN 1 THEN 'one'
+    ->     WHEN 2 THEN 'two' ELSE 'more' END;
+        -> 'one'
+mysql> SELECT CASE WHEN 1>0 THEN 'true' ELSE 'false' END;
+        -> 'true'
+mysql> SELECT CASE BINARY 'B'
+    ->     WHEN 'a' THEN 1 WHEN 'b' THEN 2 END;
+        -> NULL
+
+
+ex- 
+
+
+mysql> select case  when deptno = 10 then "DEVELOPMENT" when deptno=20 then "TESTING" else "UNKown" end as DEPT from emp;
++-------------+
+| DEPT        |
++-------------+
+| TESTING     |
+| UNKown      |
+| UNKown      |
+| TESTING     |
+| UNKown      |
+| UNKown      |
+| DEVELOPMENT |
+| TESTING     |
+| DEVELOPMENT |
+| UNKown      |
+| TESTING     |
+| UNKown      |
+| TESTING     |
+| DEVELOPMENT |
+| UNKown      |
+| UNKown      |
+| UNKown      |
++-------------+
+17 rows in set (0.00 sec)
+
+
+
+------ if function---
+
+If expr1 is TRUE (expr1 <> 0 and expr1 IS NOT NULL), IF() returns
+expr2. Otherwise, it returns expr3.
+
+*Note*:
+
+There is also an IF statement, which differs from the IF() function
+described here. See [HELP IF statement].
+
+If only one of expr2 or expr3 is explicitly NULL, the result type of
+the IF() function is the type of the non-NULL expression.
+
+The default return type of IF() (which may matter when it is stored
+into a temporary table) is calculated as follows:
+
+o If expr2 or expr3 produce a string, the result is a string.
+
+  If expr2 and expr3 are both strings, the result is case-sensitive if
+  either string is case-sensitive.
+
+o If expr2 or expr3 produce a floating-point value, the result is a
+  floating-point value.
+
+o If expr2 or expr3 produce an integer, the result is an integer.
+
+
+
+Examples:
+mysql> SELECT IF(1>2,2,3);
+        -> 3
+mysql> SELECT IF(1<2,'yes','no');
+        -> 'yes'
+mysql> SELECT IF(STRCMP('test','test1'),'no','yes');
+        -> 'no'
+
+
+
+mysql> select ename,sal, if(sal<2000,"Poor",if(sal is null,"Unkown","Rich")) as category  from emp;
++--------+---------+----------+
+| ename  | sal     | category |
++--------+---------+----------+
+| SMITH  |  800.00 | Poor     |
+| ALLEN  | 1600.00 | Poor     |
+| WARD   | 1250.00 | Poor     |
+| JONES  | 2975.00 | Rich     |
+| MARTIN | 1250.00 | Poor     |
+| BLAKE  | 2850.00 | Rich     |
+| CLARK  | 2450.00 | Rich     |
+| SCOTT  | 3000.00 | Rich     |
+| KING   | 5000.00 | Rich     |
+| TURNER | 1500.00 | Poor     |
+| ADAMS  | 1100.00 | Poor     |
+| JAMES  |  950.00 | Poor     |
+| FORD   | 3000.00 | Rich     |
+| MILLER | 1300.00 | Poor     |
+| B      | 1000.00 | Poor     |
+| J      |    NULL | Unkown   |
+| K      |    NULL | Unkown   |
++--------+---------+----------+
+17 rows in set (0.00 sec)
+
+
+
+
+------- if null
+
+IFNULL(expr1,expr2)
+
+If expr1 is not NULL, IFNULL() returns expr1; otherwise it returns
+expr2.
+
+URL: https://dev.mysql.com/doc/refman/8.0/en/flow-control-functions.html
+
+Examples:
+mysql> SELECT IFNULL(1,0);
+        -> 1
+mysql> SELECT IFNULL(NULL,10);
+        -> 10
+mysql> SELECT IFNULL(1/0,10);
+        -> 10
+mysql> SELECT IFNULL(1/0,'yes');
+        -> 'yes'
+
+
+- display all the comm, if the comm is null then display their salary 
+
+mysql> select ename, comm, ifnull(comm,ifnull(sal,"unknown")) as COMM_else_sal from emp;
++--------+---------+---------------+
+| ename  | comm    | COMM_else_sal |
++--------+---------+---------------+
+| SMITH  |    NULL | 800.00        |
+| ALLEN  |  300.00 | 300.00        |
+| WARD   |  500.00 | 500.00        |
+| JONES  |    NULL | 2975.00       |
+| MARTIN | 1400.00 | 1400.00       |
+| BLAKE  |    NULL | 2850.00       |
+| CLARK  |    NULL | 2450.00       |
+| SCOTT  |    NULL | 3000.00       |
+| KING   |    NULL | 5000.00       |
+| TURNER |    0.00 | 0.00          |
+| ADAMS  |    NULL | 1100.00       |
+| JAMES  |    NULL | 950.00        |
+| FORD   |    NULL | 3000.00       |
+| MILLER |    NULL | 1300.00       |
+| B      |  200.00 | 200.00        |
+| J      |    NULL | unknown       |
+| K      |    NULL | unknown       |
++--------+---------+---------------+
+17 rows in set (0.00 sec)
+
+or 
+
+mysql> select if(comm is null, sal,comm) as comm_else_sal from emp;
++---------------+
+| comm_else_sal |
++---------------+
+|        800.00 |
+|        300.00 |
+|        500.00 |
+|       2975.00 |
+|       1400.00 |
+|       2850.00 |
+|       2450.00 |
+|       3000.00 |
+|       5000.00 |
+|          0.00 |
+|       1100.00 |
+|        950.00 |
+|       3000.00 |
+|       1300.00 |
+|        200.00 |
+|          NULL |
+|          NULL |
++---------------+
+17 rows in set (0.00 sec)
+
+
+-----------------------------------------------------------------
+-> make comm as null if the sal is 1250
+
+mysql> select ename,if(sal = 1250,null,sal) from emp;
++--------+-------------------------+
+| ename  | if(sal = 1250,null,sal) |
++--------+-------------------------+
+| SMITH  |                  800.00 |
+| ALLEN  |                 1600.00 |
+| WARD   |                    NULL |
+| JONES  |                 2975.00 |
+| MARTIN |                    NULL |
+| BLAKE  |                 2850.00 |
+| CLARK  |                 2450.00 |
+| SCOTT  |                 3000.00 |
+| KING   |                 5000.00 |
+| TURNER |                 1500.00 |
+| ADAMS  |                 1100.00 |
+| JAMES  |                  950.00 |
+| FORD   |                 3000.00 |
+| MILLER |                 1300.00 |
+| B      |                 1000.00 |
+| J      |                    NULL |
+| K      |                    NULL |
++--------+-------------------------+
+17 rows in set (0.00 sec)
+
+or
+
+mysql> select nullif(sal,1250) from emp;
++------------------+
+| nullif(sal,1250) |
++------------------+
+|           800.00 |
+|          1600.00 |
+|             NULL |
+|          2975.00 |
+|             NULL |
+|          2850.00 |
+|          2450.00 |
+|          3000.00 |
+|          5000.00 |
+|          1500.00 |
+|          1100.00 |
+|           950.00 |
+|          3000.00 |
+|          1300.00 |
+|          1000.00 |
+|             NULL |
+|             NULL |
++------------------+
+17 rows in set (0.00 sec)
+
+
+
+NULLIF(expr1,expr2)        (only works for equality check)
+
+Returns NULL if expr1 = expr2 is true, otherwise returns expr1. This is
+the same as CASE WHEN expr1 = expr2 THEN NULL ELSE expr1 END.
+
+The return value has the same type as the first argument.
+
+URL: https://dev.mysql.com/doc/refman/8.0/en/flow-control-functions.html
+
+Examples:
+mysql> SELECT NULLIF(1,1);
+        -> NULL
+mysql> SELECT NULLIF(1,2);
+        -> 1
+
+
+
+
+-------------------------------
+
+======= misc functions =========
+
+
+mysql> select version();
++-------------------------+
+| version()               |
++-------------------------+
+| 8.0.40-0ubuntu0.22.04.1 |
++-------------------------+
+1 row in set (0.00 sec)
+
+mysql> select database();
++--------------+
+| database()   |
++--------------+
+| classwork_db |
++--------------+
+1 row in set (0.00 sec)
+
+mysql> select user();
++----------------+
+| user()         |
++----------------+
+| root@localhost |
++----------------+
+1 row in set (0.00 sec)
+
+
+==========
+SQL functions: 
+1. nnumeric
+2. string
+3. date and time
+4. flow control functions
+5. misc functions
+
+
+till now we have seen -> [ Single row functions ]
+
+- Single row funcitons are funcitons that are applied for every single row
+ 	n input rows then n output rows
+ 	
+ 	Observations :-
+ > we can select the other cols into the project along with the single row funcitons
+ > we can do the nesting of sinle row funcions 
+ > we can even use the single row function in the where clause
+ 
+ 
+ 
+ ==============================
+ 
+ 
+ mysql> select @@sql_mode;
++-----------------------------------------------------------------------------------------------------------------------+
+| @@sql_mode                                                                                                            |
++-----------------------------------------------------------------------------------------------------------------------+
+| ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION |
++-----------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+=======================================
+
+
+
+mysql> select date_format(now(),"%W,[%H:%i:%s],%d,%M,%Y");
++---------------------------------------------+
+| date_format(now(),"%W,[%H:%i:%s],%d,%M,%Y") |
++---------------------------------------------+
+| Tuesday,[10:22:48],19,November,2024         |
++---------------------------------------------+
+1 row in set (0.00 sec)
+
+ 

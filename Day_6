@@ -1,0 +1,1426 @@
+
+DQL , DML is done in previous classes
+- done with functions 
+- done with joins		
+
+Standard - joins works in all the databases
+
+=======================  NON standard Joins ============================
+
+- (default join in inner join) 
+- Cross join works with "on" condition same as inner
+
+
+1. display the emp name and dname of all emps  (All non standards)
+ 	(see all of them - they are not recommended tho)
+
+
+mysql> select e.ename , d.dname from emps e Join depts d on d.deptno = e.deptno;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
++--------+-------+
+3 rows in set (0.01 sec)
+
+mysql> select e.ename , d.dname from emps e cross join depts d on d.deptno = e.deptno;				
++--------+-------+
+| ename  | dname |		# condition then use inner dude
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
++--------+-------+
+3 rows in set (0.00 sec)
+
+mysql> select e.ename , d.dname from emps e cross join depts d where d.deptno = e.deptno;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
++--------+-------+
+3 rows in set (0.00 sec)
+
+---------------------- its also working as join---------------------
+mysql> select e.ename , d.dname from emps e ,depts d where d.deptno = e.deptno;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
++--------+-------+
+3 rows in set (0.00 sec)
+-----------------------------------------------------------
+		
+		
+		(deptno number should be common column)
+		--Using only works in MYSql
+		
+mysql> select e.ename,d.dname 
+    -> from emps e
+    -> Inner join
+    -> depts d
+    -> USING(deptno);
+    
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
++--------+-------+
+3 rows in set (0.00 sec)
+
+
+--- Natural join - Join will be applied on common column autoamtically ---
+
+mysql> select e.ename,d.dname from emps e
+    -> NATURAL JOIN depts d;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
++--------+-------+
+3 rows in set (0.00 sec)
+
+
+=================================================
+
+when to  use cross join
+Example :  display all possible depts for amit and nilesh
+
+
+mysql> select e.ename,d.dname from emps e cross join depts d where e.ename in ("Amit","Nilesh") order by ename;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Amit   | QA    |
+| Amit   | OPS   |
+| Amit   | ACC   |
+| Nilesh | DEV   |
+| Nilesh | QA    |
+| Nilesh | OPS   |
+| Nilesh | ACC   |
++--------+-------+
+8 rows in set (0.00 sec)
+
+
+======================================================================
+
+
+
+
+
+----------------  DCL  (DATA CONTROL LANGUAGE) -----------------
+
+- who is going to manage the entire database
+- we can't give all employees the root user and password , someone can delete entire databases
+- freshers can fuck up the database if they have total control of the database
+- So all such permission should be given to responsible person 
+- and give restricted permission to others
+
+- create / deletion should not be given to other persons
+
+- just give them permission on tables they want in the project
+
+So for these restriction we use DCL
+
+----------
+
+
+mysql> select user();
++----------------+
+| user()         |
++----------------+
+| root@localhost |
++----------------+
+1 row in set (0.00 sec)
+
+
+
+
+
+
+mysql> select user from mysql.user;
++------------------+
+| user             |
++------------------+
+| debian-sys-maint |
+| mysql.infoschema |
+| mysql.session    |
+| mysql.sys        |
+| root             |
++------------------+
+5 rows in set (0.00 sec)
+
+
+
+mysql> select user();
++----------------+
+| user()         |
++----------------+
+| root@localhost |
++----------------+
+1 row in set (0.01 sec)
+
+mysql> PROMPT \u>
+PROMPT set to '\u>'
+root>
+
+
+
+
+1. creating new user and testing some funcitonalities on it
+
+
+
+root>create user  'mgr'@'localhost' IDENTIFIED BY 'mgr';   (mgr is user and also password)
+Query OK, 0 rows affected (0.02 sec)
+
+
+----go to other terminal and login use this------------
+
+atul@atul-ROG-Strix-G531GT-G531GT:~/Desktop$ mysql -u mgr -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 10
+Server version: 8.0.40-0ubuntu0.22.04.1 (Ubuntu)
+
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> select user();
++---------------+
+| user()        |
++---------------+
+| mgr@localhost |
++---------------+
+1 row in set (0.00 sec)
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| performance_schema |
++--------------------+
+2 rows in set (0.00 sec)
+
+mysql> prompt \u>
+PROMPT set to '\u>'
+mgr>show databases;
+
+
+
+
+----------- now we want to give SELECT permission of classwork_db of emp tabel to mgr from root
+
+root>use classwork_db;
+Database changed
+root>
+root>GRANT SELECT ON classwork_db.emp TO 'mgr'@'localhost';
+Query OK, 0 rows affected (0.01 sec)
+
+root>
+
+
+
+---- Now check in mgr (if it can access the emp) ----------------------
+
+
+mgr>show databases;
++--------------------+
+| Database           |
++--------------------+
+| classwork_db       |
+| information_schema |
+| performance_schema |
++--------------------+
+3 rows in set (0.00 sec)
+
+mgr>use classwork_db;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mgr>show tables;
++------------------------+
+| Tables_in_classwork_db |
++------------------------+PROMPT \u>
+| emp                    |
++------------------------+
+1 row in set (0.01 sec)
+
+mgr>select * from emp;
++-------+--------+-----------+------+------------+---------+---------+--------+
+| empno | ename  | job       | mgr  | hire       | sal     | comm    | deptno |
++-------+--------+-----------+------+------------+---------+---------+--------+
+|  7369 | SMITH  | CLERK     | 7902 | 1980-12-17 |  800.00 |    NULL |     20 |
+|  7499 | ALLEN  | SALESMAN  | 7698 | 1981-02-20 | 1600.00 |  300.00 |     30 |
+|  7521 | WARD   | SALESMAN  | 7698 | 1981-02-22 | 1250.00 |  500.00 |     30 |
+|  7566 | JONES  | MANAGER   | 7839 | 1981-04-02 | 2975.00 |    NULL |     20 |
+|  7654 | MARTIN | SALESMAN  | 7698 | 1981-09-28 | 1250.00 | 1400.00 |     30 |
+|  7698 | BLAKE  | MANAGER   | 7839 | 1981-05-01 | 2850.00 |    NULL |     30 |
+|  7782 | CLARK  | MANAGER   | 7839 | 1981-06-09 | 2450.00 |    NULL |     10 |
+|  7788 | SCOTT  | ANALYST   | 7566 | 1982-12-09 | 3000.00 |    NULL |     20 |
+|  7839 | KING   | PRESIDENT | NULL | 1981-11-17 | 5000.00 |    NULL |     10 |
+|  7844 | TURNER | SALESMAN  | 7698 | 1981-09-08 | 1500.00 |    0.00 |     30 |
+|  7876 | ADAMS  | CLERK     | 7788 | 1983-01-12 | 1100.00 |    NULL |     20 |
+|  7900 | JAMES  | CLERK     | 7698 | 1981-12-03 |  950.00 |    NULL |     30 |
+|  7902 | FORD   | ANALYST   | 7566 | 1981-12-03 | 3000.00 |    NULL |     20 |
+|  7934 | MILLER | CLERK     | 7782 | 1982-01-23 | 1300.00 |    NULL |     10 |
++-------+--------+-----------+------+------------+---------+---------+--------+
+14 rows in set (0.05 sec)
+
+
+
+
+
+
+
+
+2. provide select permission on emps to manger
+
+
+root>Grant select on classwork_db.emps to 'mgr'@'localhost';
+Query OK, 0 rows affected (0.05 sec)
+
+
+mgr>show tables;
++------------------------+
+| Tables_in_classwork_db |
++------------------------+
+| emp                    |
+| emps                   |
++------------------------+
+2 rows in set (0.00 sec)
+			
+			 (no other permission other than select)	
+					
+mgr>delete from emps where ename = "Sarang";
+ERROR 1142 (42000): DELETE command denied to user 'mgr'@'localhost' for table 'emps'
+
+mgr>insert into emps(empno,ename) values(6,"atul");
+ERROR 1142 (42000): INSERT command denied to user 'mgr'@'localhost' for table 'emps'
+
+mgr>update emps set deptno = 40 where id =4;
+ERROR 1142 (42000): UPDATE command denied to user 'mgr'@'localhost' for table 'emps'
+
+
+
+
+
+------------ To see permissions mgr has  from mgr prompt --------------------
+	
+	(first statement is just , how u can give the grants)
+	(grants are shows after first row)
+
+mgr> SHOW GRANTS;
++------------------------------------------------------------+
+| Grants for mgr@localhost                                   |
++------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `mgr`@`localhost`                    |
+| GRANT SELECT ON `classwork_db`.`emp` TO `mgr`@`localhost`  |
+| GRANT SELECT ON `classwork_db`.`emps` TO `mgr`@`localhost` |
++------------------------------------------------------------+
+3 rows in set (0.00 sec)
+
+
+
+	-- to see mgr grants from root
+	
+root> SHOW Grants for 'mgr'@'localhost';
++------------------------------------------------------------+
+| Grants for mgr@localhost                                   |
++------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `mgr`@`localhost`                    |
+| GRANT SELECT ON `classwork_db`.`emp` TO `mgr`@`localhost`  |
+| GRANT SELECT ON `classwork_db`.`emps` TO `mgr`@`localhost` |
++------------------------------------------------------------+
+3 rows in set (0.00 sec)
+
+
+
+-----------------------------
+
+
+
+
+2. provide the insert permission on emps to mgr
+
+root> GRANT INSERT on classwork_db.emps TO 'mgr'@'localhost';
+Query OK, 0 rows affected (0.05 sec)
+
+
+mgr> SHOW GRANTS;
++--------------------------------------------------------------------+
+| Grants for mgr@localhost                                           |
++--------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `mgr`@`localhost`                            |
+| GRANT SELECT ON `classwork_db`.`emp` TO `mgr`@`localhost`          |
+| GRANT SELECT, INSERT ON `classwork_db`.`emps` TO `mgr`@`localhost` |
++--------------------------------------------------------------------+
+3 rows in set (0.00 sec)
+
+mgr>insert into emps(empno,ename) values(6,"atul");
+Query OK, 1 row affected (0.05 sec)
+
+
+------------------------------
+
+
+3. provide update and delete permission on emps to mgr
+
+
+root> GRANT UPDATE, DELETE on classwork_db.emps to 'mgr'@'localhost';
+Query OK, 0 rows affected (0.05 sec)
+
+mgr> show grants;
++------------------------------------------------------------------------------------+
+| Grants for mgr@localhost                                                           |
++------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `mgr`@`localhost`                                            |
+| GRANT SELECT ON `classwork_db`.`emp` TO `mgr`@`localhost`                          |
+| GRANT SELECT, INSERT, UPDATE, DELETE ON `classwork_db`.`emps` TO `mgr`@`localhost` |
++------------------------------------------------------------------------------------+
+3 rows in set (0.00 sec)
+
+
+mgr>delete from emps where ename = "atul";
+Query OK, 1 row affected (0.01 sec)
+
+
+---------------------------------------------
+
+
+mgr> drop tables emps;
+ERROR 1142 (42000): DROP command denied to user 'mgr'@'localhost' for table 'emps'
+
+ (drop truncate delete should not be given)
+ 
+
+
+4.  REMOVE the Permission of delete From permission -------     (REVOKE)
+
+root>  REVOKE DELETE ON classwork_db.emps from 'mgr'@'localhost';
+Query OK, 0 rows affected (0.06 sec)
+
+mgr>show grants;
++----------------------------------------------------------------------------+
+| Grants for mgr@localhost                                                   |
++----------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `mgr`@`localhost`                                    |
+| GRANT SELECT ON `classwork_db`.`emp` TO `mgr`@`localhost`                  |
+| GRANT SELECT, INSERT, UPDATE ON `classwork_db`.`emps` TO `mgr`@`localhost` |
++----------------------------------------------------------------------------+
+3 rows in set (0.00 sec)
+
+
+
+-----------------------------------------------------------
+
+
+5.  GIVE all permission/privileges  to mgr for books tales
+
+root> Grant ALL PRIVILEGES on classwork_db.books to 'mgr'@'localhost';
+Query OK, 0 rows affected (0.01 sec)
+
+mgr>show grants;
++----------------------------------------------------------------------------+
+| Grants for mgr@localhost                                                   |
++----------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `mgr`@`localhost`                                    |
+| GRANT ALL PRIVILEGES ON `classwork_db`.`books` TO `mgr`@`localhost`        |
+| GRANT SELECT ON `classwork_db`.`emp` TO `mgr`@`localhost`                  |
+| GRANT SELECT, INSERT, UPDATE ON `classwork_db`.`emps` TO `mgr`@`localhost` |
++----------------------------------------------------------------------------+
+4 rows in set (0.00 sec)
+
+
+		-- now perform all the operations on books table through mgr
+		
+mgr>insert into books values(1234,"harry potter hhoh","zz","magic",9999);
+Query OK, 1 row affected (0.01 sec)
+
+
+mgr>delete from books where author in ("atul","zz");
+Query OK, 2 rows affected (0.05 sec)
+
+
+all the operations permissions (delete , drop , insert etc ) will be gives when doing (GRANT ALL PRIVILEGES)
+
+------------------------------------------------------------
+
+
+mgr>create table awesome(name varchar(20));
+
+ERROR 1142 (42000): CREATE command denied to user 'mgr'@'localhost' for table 'awesome'
+
+
+------------------------------------------------------------------
+
+
+6. Provide all permission on the classwork databse to the mgr
+
+
+root> GRANT ALL PRiVILEGES on classwork_db.* to 'mgr'@'localhost';
+Query OK, 0 rows affected (0.01 sec)
+
+
+mgr>show grants;
++----------------------------------------------------------------------------+
+| Grants for mgr@localhost                                                   |
++----------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `mgr`@`localhost`                                    |
+| GRANT ALL PRIVILEGES ON `classwork_db`.* TO `mgr`@`localhost`              |
+| GRANT ALL PRIVILEGES ON `classwork_db`.`books` TO `mgr`@`localhost`        |
+| GRANT SELECT ON `classwork_db`.`emp` TO `mgr`@`localhost`                  |
+| GRANT SELECT, INSERT, UPDATE ON `classwork_db`.`emps` TO `mgr`@`localhost` |
++----------------------------------------------------------------------------+
+5 rows in set (0.00 sec)
+
+
+- now we can create/udpate/delete tables in classwork
+
+mgr>use classwork_db;				(refreshing)
+Database changed
+
+mgr>show tables;			( we can see all the tables )
++------------------------+
+| Tables_in_classwork_db |
++------------------------+
+| addr                   |
+| books                  |
+| depts                  |
+| emp                    |
+| emp_meeting            |
+| emps                   |
+| meeting                |
+| salgrade               |
++------------------------+
+8 rows in set (0.00 sec)
+
+
+--- now we can
+
+mgr>create table awesome(name varchar(20));
+Query OK, 0 rows affected (0.08 sec)
+
+mgr>desc awesome;
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| name  | varchar(20) | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+1 row in set (0.01 sec)
+
+mgr>drop table awesome;
+Query OK, 0 rows affected (0.07 sec)
+
+
+
+------------------------------------------------------------------
+
+
+
+7. can manager create another user ?
+
+mgr>CREATE USER 'dev'@'localhost' IDENTIFIED BY 'dev';
+ERROR 1227 (42000): Access denied; you need (at least one of) the CREATE USER privilege(s) for this operation
+
+(ask mgr to mail me , i will do it)
+
+
+
+--------------------------------------
+
+8. Delete the  'mgr'
+
+root>DROP user 'mgr'@'localhost';
+Query OK, 0 rows affected (0.05 sec)
+
+
+only after mgr exit , then it will be deleted
+
+mgr>exit
+Bye
+
+-------------------------
+
+
+mysql> select user from mysql.user;
+
+
+
+----------------
+=====================================
+
+- for all users it maintains data in 
+root> desc mysql.user;
+
+(don't do any dml operations on this)
+
+
+======================================
+
+
+
+
+
+9. 
+
+root>select user,host from mysql.user;
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| mgr              | local     |
+| debian-sys-maint | localhost |
+| mysql.infoschema | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| root             | localhost |
++------------------+-----------+
+6 rows in set (0.00 sec)
+
+root>DROP user 'mgr'@'local';
+Query OK, 0 rows affected (0.01 sec)
+
+
+
+=====================================================================
+
+10. create the multiple user 
+
+
+root>create user 'mgr'@'localhost' Identified by 'mgr';
+Query OK, 0 rows affected (0.06 sec)
+
+root>select user,host from mysql.user;
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| debian-sys-maint | localhost |
+| mgr              | localhost |
+| mysql.infoschema | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| root             | localhost |
++------------------+-----------+
+6 rows in set (0.00 sec)
+
+
+--> mgr can logic to database using localhost machine
+
+--------------
+
+root>Create user teamlead identified by 'teamlead';
+Query OK, 0 rows affected (0.02 sec)
+
+root>select user,host from mysql.user;
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| teamlead         | %         |
+| debian-sys-maint | localhost |
+| mgr              | localhost |
+| mysql.infoschema | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| root             | localhost |
++------------------+-----------+
+7 rows in set (0.00 sec)
+
+%   ->  means teamlead can login to database from any machine 
+
+
+
+--------
+root>Create USER dev Identified by 'dev';
+Query OK, 0 rows affected (0.06 sec)
+
+
+root>select user,host from mysql.user;
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| dev              | %         |
+| teamlead         | %         |
+| debian-sys-maint | localhost |
+| mgr              | localhost |
+| mysql.infoschema | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| root             | localhost |
++------------------+-----------+
+8 rows in set (0.00 sec)
+
+
+
+============== Giving GRANT option on classwork_db  to mgr ==========================
+
+root>show databases;
++--------------------+
+| Database           |
++--------------------+
+| classwork_db       |
+| dbda_db            |
+| hr_db              |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sales_db           |
+| spj                |
+| sys                |
++--------------------+
+9 rows in set (0.01 sec)
+
+root>Grant all Privileges on classwork_db.* to 'mgr'@'localhost' with GRANT option;
+Query OK, 0 rows affected (0.05 sec)
+
+
+mgr>show Grants;
++---------------------------------------------------------------------------------+
+| Grants for mgr@localhost                                                        |
++---------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO `mgr`@`localhost`                                         |
+| GRANT ALL PRIVILEGES ON `classwork_db`.* TO `mgr`@`localhost` WITH GRANT OPTION |
++---------------------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+
+mgr >  we can do delete / drop / update etc all on emps on classwork_db;
+
+
+==========================================================
+
+
+
+
+11.  We provided Grant option to mgr , now we can give privileges to other through mgr
+
+mgr> GRANT ALL PRIVILEGES ON classwork_db.emps to teamlead;
+Query OK, 0 rows affected (0.05 sec)
+
+mgr> GRANT ALL PRIVILEGES ON classwork_db.depts to teamlead;
+Query OK, 0 rows affected (0.01 sec)
+
+mgr> GRANT ALL PRIVILEGES ON classwork_db.addr to teamlead;
+Query OK, 0 rows affected (0.01 sec)
+
+
+
+----in teamlead mysql-----
+
+
+mysql> prompt \u>
+PROMPT set to '\u>'
+
+
+teamlead>show databases;
++--------------------+
+| Database           |
++--------------------+
+| classwork_db       |
+| information_schema |
+| performance_schema |
++--------------------+
+3 rows in set (0.00 sec)
+
+teamlead> use classwork_db;
+Database changed
+
+teamlead> show tables;
++------------------------+
+| Tables_in_classwork_db |
++------------------------+
+| addr                   |
+| depts                  |
+| emps                   |
++------------------------+
+3 rows in set (0.01 sec)
+
+
+
+
+===================
+
+12. grant select and insert privileges to  'dev' on emps from mgr
+ 
+mgr>GRANT  SELECT, INSERT on classwork_db.emps to dev;
+Query OK, 0 rows affected (0.05 sec)
+
+
+dev>show databases;
++--------------------+
+| Database           |
++--------------------+
+| classwork_db       |
+| information_schema |
+| performance_schema |
++--------------------+
+3 rows in set (0.00 sec)
+
+dev>use classwork_db;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+dev>show tables;
++------------------------+
+| Tables_in_classwork_db |
++------------------------+
+| emps                   |
++------------------------+
+1 row in set (0.01 sec)
+
+
+
+
+========================
+
+Now  if  TEAMLEAD  changed anything (delete something / insert something)
+	- then it will be instantly shown in other users as well
+
+
+
+ex:
+
+teamlead>insert into emps values(6,"atul",55,123);
+Query OK, 1 row affected (0.05 sec)
+
+
+dev>select * from emps;
++-------+--------+--------+------+
+| empno | ename  | deptno | mgr  |
++-------+--------+--------+------+
+|     1 | Amit   |     10 |    4 |
+|     2 | Rahul  |     10 |    3 |
+|     3 | Nilesh |     20 |    4 |
+|     4 | Nitin  |     50 |    5 |
+|     5 | Sarang |     50 | NULL |
+|     6 | atul   |     55 |  123 |
++-------+--------+--------+------+
+6 rows in set (0.00 sec)
+
+
+
+
+===========================
+
+
+
+------------------------------- TRANSACTIONs --------------------------------------
+
+
+- mysql  suppports ACID transactions
+
+A - atomicity 		(every transactions will be Successfull or Fail) , partial not allowed
+C - Consistency		(Result will be consistent for all the user)
+I - Isolation    	(trasaction only one after another)
+D - Durability		(after completing the transaction , save the state on the server)
+
+
+
+  TCS  -  Transaction Control Language
+
+-  START TRANSACTION
+-  SAVEPOINT
+-  ROLLBACK
+-  COMMIT
+
+
+---------------------------------------------------------------------------
+1. 
+
+mysql> CREATE table accounts(accno INT,type varchar(10), balance Double);
+
+
+mysql> Insert into accounts values(1,"SAVINGS",10000);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> Insert into accounts values(2,"CURRENT",20000);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> Insert into accounts values(3,"SAVINGS",30000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> Insert into accounts values(4,"SAVINGS",25000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> Insert into accounts values(5,"CURRENT",45000);
+Query OK, 1 row affected (0.06 sec)
+
+
+------ now I want mgr and teamlead side by side-----------
+
+
+mgr>Grant all privileges on classwork_db.accounts to teamlead;
+Query OK, 0 rows affected (0.05 sec)
+
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   20000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   45000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+1. I want to take out 15000 from acc 3
+
+
+--------we did a mistake --------
+
+mgr>UPDATE accounts SET balance = balance - 15000 where accno=1;
+Query OK, 1 row affected (0.05 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   -5000 |
+|     2 | CURRENT |   20000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   45000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+----------- all commits are by default in MYSQL
+
+
+mgr>UPDATE accounts SET balance = balance + 15000 where accno=1;
+Query OK, 1 row affected (0.05 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+
+----------------------------------------------
+
+
+
+- START transaction
+-> auto commit becomes false 
+
+
+
+============ correct way =======
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   20000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   45000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+mgr> START TRANSACTION;				[START TRANSACTION]
+Query OK, 0 rows affected (0.00 sec)
+
+mgr>UPDATE accounts SET balance = balance - 15000 where accno=1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   -5000 |
+|     2 | CURRENT |   20000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   45000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+mgr>ROLLBACK;					[ ROLLBACK ]
+Query OK, 0 rows affected (0.05 sec)
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   20000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   45000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+- WE have to start new TRANSACTION      (after rollback , transaction ends)
+
+
+- if we update something , will be auto commited !
+- so we mush start transaction again , then only we will be able to rollback
+======================================
+
+
+mgr>select @@autocommit;
++--------------+
+| @@autocommit |
++--------------+
+|            1 |
++--------------+
+1 row in set (0.00 sec)
+
+
+
+
+-----------------TO make it permanent false  ---- (use commit manually)------------------
+
+mgr>select @@autocommit;
++--------------+
+| @@autocommit |
++--------------+
+|            1 |
++--------------+
+1 row in set (0.00 sec)
+
+mgr>rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mgr>select @@autocommit;
++--------------+
+| @@autocommit |
++--------------+
+|            1 |
++--------------+
+1 row in set (0.00 sec)
+
+mgr>set @@autocommit = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mgr>select @@autocommit;
++--------------+
+| @@autocommit |
++--------------+
+|            0 |
++--------------+
+1 row in set (0.00 sec)
+
+mgr>UPDATE accounts SET balance = balance + 15000 where accno=1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mgr>commit;						[ COMMIT ]
+Query OK, 0 rows affected (0.00 sec)
+
+
+--------------------------------------------------------------
+
+set it back to 1 
+
+mgr>set @@autocommit = 1;
+Query OK, 0 rows affected (0.00 sec)
+
+----------------------------------------
+
+=============================================================================
+
+
+
+QUES:  from 5th account we want to debit 5000 and credit it to account 2
+
+
+->   mistake happed then do rollback 
+
+mgr>Start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   20000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   45000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+mgr>UPDATE accounts SET balance = balance-5000 where accno=5;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>UPDATE accounts SET balance = balance+5000 where accno=200;   [mistake]
+Query OK, 0 rows affected (0.00 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+
+mgr>rollback
+    -> ;
+Query OK, 0 rows affected (0.05 sec)
+
+
+
+now again start the transaction 
+
+
+mgr>start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+mgr>UPDATE accounts SET balance = balance-5000 where accno=5;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>UPDATE accounts SET balance = balance+5000 where accno=2;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   25000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.01 sec)
+
+mgr>commit;				[COMMIT done , transaction finished]
+Query OK, 0 rows affected (0.01 sec)
+
+
+=====================================================================
+
+
+
+------- Now we want to Maintain the State of the transaction - SAVEPOINT ------------
+
+# SAVEPOINT
+
+EXAMPLE:-
+
+mgr>start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+mgr>UPDATE accounts SET balance = balance-5000 where accno=3;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   25000 |
+|     3 | SAVINGS |   25000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.01 sec)
+
+
+mgr>SAVEPOINT sp1;
+Query OK, 0 rows affected (0.00 sec)
+
+
+mgr>UPDATE accounts SET balance = balance-3000 where accno=2;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>SAVEPOINT sp2;
+Query OK, 0 rows affected (0.00 sec)
+
+[we wanted to add in acc = 4 but we did in acc = 5 ]
+
+mgr>UPDATE accounts SET balance = balance+3000 where accno=5;   
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   22000 |
+|     3 | SAVINGS |   25000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   43000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+mgr>ROLLBACK to sp2;				[Rollbacked to sp2 check point]
+Query OK, 0 rows affected (0.01 sec)
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   22000 |
+|     3 | SAVINGS |   25000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+
+mgr>UPDATE accounts SET balance = balance+3000 where accno=4;  
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   22000 |
+|     3 | SAVINGS |   25000 |
+|     4 | SAVINGS |   28000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+
+> now again to revert back to sp1
+
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   25000 |
+|     3 | SAVINGS |   25000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+
+mgr>rollback;							[transaction Completed]
+Query OK, 0 rows affected (0.00 sec)
+
+
+
+===================================================
+
+transactions from multiple users   (mgr and teamlead)
+
+
+teamlead>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   25000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+teamlead>update accounts set balance = 15000 where accno = 1;
+Query OK, 1 row affected (0.05 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+teamlead>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   15000 |
+|     2 | CURRENT |   25000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+
+Now teamlead want to start transaction , to update stuff
+
+teamlead>start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+ teamlead>update accounts set balance = 25000 where accno=2;
+Query OK, 0 rows affected (0.01 sec)
+Rows matched: 1  Changed: 0  Warnings: 0
+
+teamlead>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   15000 |
+|     2 | CURRENT |   25000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+
+(transaction not commited so original table remain unchanged)
+mgr>select * from accounts;
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   15000 |
+|     2 | CURRENT |   25000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   40000 |
++-------+---------+---------+
+5 rows in set (0.00 sec)
+
+
+
+
+
+
+=========================================================
+
+If teamlead starts a transaction , and mgr trys to update then mgr will get timeout
+-  [so every transaction is in isolation]
+- mgr will only get change when transaction by teamlead ends
+
+
+ 
+teamlead>start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+teamlead>update accounts set balance = 25000 where accno=2;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mgr>update accounts set balance = 4115000 where accno=4;
+   
+ERROR 1205 (HY000): Lock wait timeout exceeded; try restarting transaction
+
+
+teamlead>rollback;
+Query OK, 0 rows affected (0.05 sec)
+
+------------------------------------------------------------
+
+
+
+Start transaction 1				[entire table gets locked]
+
+upadte 
+
+Start new transaction 2     [then the previous transaction is considered COMMIT]
+
+
+--------------------------------------------------------------------
+-------------------------------------------------------------------
+
+
+mgr>grant all privileges on classwork_db.books to teamlead;
+Query OK, 0 rows affected (0.06 sec)
+
+
+teamlead>select * from books
+    -> ;
++------+---------------------------------+-------------------+-------------------+---------+
+| id   | name                            | author            | subject           | price   |
++------+---------------------------------+-------------------+-------------------+---------+
+| 1001 | Exploring C                     | Yashwant Kanetkar | C Programming     | 123.456 |
+| 1002 | Pointers in C                   | Yashwant Kanetkar | C Programming     | 371.019 |
+| 1003 | ANSI C Programming              | E Balaguruswami   | C Programming     | 334.215 |
+| 1004 | ANSI C Programming              | Dennis Ritchie    | C Programming     | 140.121 |
+| 2001 | C++ Complete Reference          | Herbert Schildt   | C++ Programming   | 367.764 |
+| 2002 | C++ Primer                      | Stanley Lippman   | C++ Programming   | 570.665 |
+| 2003 | C++ Programming Language        | Bjarne Stroustrup | C++ Programming   | 937.213 |
+| 3001 | Java Complete Reference         | Herbert Schildt   | Java Programming  | 475.121 |
+| 3002 | Core Java Volume I              | Cay Horstmann     | Java Programming  | 525.651 |
+| 3003 | Java Programming Language       | James Gosling     | Java Programming  | 408.238 |
+| 4001 | Operating System Concepts       | Peter Galvin      | Operating Systems | 517.391 |
+| 4002 | Design of UNIX Operating System | Mauris J Bach     | Operating Systems | 371.938 |
+| 4003 | UNIX Internals                  | Uresh Vahalia     | Operating Systems | 302.822 |
++------+---------------------------------+-------------------+-------------------+---------+
+13 rows in set (0.00 sec)
+
+
+
+
+
+
+-------------------------------------
+
+When a Table have a primary key, then only that row  that is having DML operation in the transaction is blocked. 
+*(primary key should be in where clause then only row wise lock, else it will lock the table)
+
+
+If no primary key then whole table is blocked.
+
+------------------------------------------
+------------------------------------------
+
+previously locks happends when one apply DML operation
+but
+
+LOCK as soon as transaction starts >   ----------- Pessimistic Locking -----------------
+
+ 
+
+teamlead>start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+teamlead>select * from accounts FOR UPDATE;      [table is locked ] (for all operations)
+
++-------+---------+---------+
+| accno | type    | balance |
++-------+---------+---------+
+|     1 | SAVINGS |   10000 |
+|     2 | CURRENT |   20000 |
+|     3 | SAVINGS |   30000 |
+|     4 | SAVINGS |   25000 |
+|     5 | CURRENT |   45000 |
++-------+---------+---------+
+5 rows in set (7.62 sec)
+
+
+mgr>update accounts set balance = 15000 where accno = 3;   [waitinigggggg]
+
+
+
+
+Pessimistic Locking  -> if we want to lock the table/rows with in the transacation before updating / del then we can do it by using the pessimistic locking.
+
+
+
+
+
+
+
+
+
+
+

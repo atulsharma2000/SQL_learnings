@@ -1,0 +1,1147 @@
+=========== Indexes  (For faster searching)=====================
+
+- data is in scattered form and its fetched into server RAM when we search 
+
+- for every single select query > it checks all rows > In one row its checks all its column and search for that column that is required > then in next row and so on
+So this search operation is very slow.
+	So to make this search fast , we use INDEXING
+	
+- frequently used columns in queries for conditions / search operations , so for such columns we create indexes
+
+- Exampple :-  deptno is used in searches frequntly 
+		then it creates Index like
+		|deptno		row address|
+		----------------------------
+		|10		10001	|
+		|20		10012	|
+		|10		10220	|
+		---------------------------
+
+
+types: 
+	1. simple
+	2. unique
+	3. composite
+	4. Unique composite
+
+-----------------------------------------------------------------
+
+mysql> explain format = json select * from books where subject = "Java Programming";
+
+		"query_cost": "1.55"
+
+
+1. lets apply index on the column subject 
+
+mysql> CREATE INDEX idx_books_subject ON books(subject);
+
+Query OK, 0 rows affected (0.09 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+
+mysql> explain format = json select * from books where subject = "Java Programming";
+	
+		"query_cost": "0.80"
+		
+		
+	=> query cost is reduced as we created index for the subject
+	(search will happen on the index of subject)
+	**(row traversal won't happed hence time is reduced)**
+	
+		known as  "SIMPLE INDEX"
+-------------------------------------------------------------------
+
+
+
+mysql> show indexes from books;
+
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name          | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| books |          0 | PRIMARY           |            1 | id          | A         |          13 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| books |          1 | idx_books_subject |            1 | subject     | A         |           4 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.05 sec)
+
+
+
+
+non_unique :  1 = true , 0 = false
+
+seq_index :  if indexes on multiple columns then at what number its this index page is
+
+collation :  asce or desc
+
+cardinality :  how many distinct/unique elements
+
+
+--------------------------------------------------------------
+--------------------------
+
+
+mysql> show INDEXES FROM emp;
+Empty set (0.01 sec)		[no indexes]
+
+mysql> explain format = json select * from emp where deptno =20;
+	"query_cost": "1.65"
+
+
+
+mysql> create index idx_emp_deptno on emp(deptno);
+Query OK, 0 rows affected (0.07 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> explain format = json select * from emp where deptno =20;
+	 "query_cost": "1.00"
+
+
+
+
+-----------------------------------------------------------------------------
+
+
+mysql> explain format = json select * from books where author = "James Gosling";
+
+	"query_cost": "1.55"
+
+
+	index in descending order
+mysql> create index idx_books_author on books(author desc);
+
+Query OK, 0 rows affected (0.08 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> explain format = json select * from books where author = "James Gosling";
+
+	"query_cost": "0.35"
+
+
+
+mysql> show indexes from books;
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name          | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| books |          0 | PRIMARY           |            1 | id          | A         |          13 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| books |          1 | idx_books_subject |            1 | subject     | A         |           4 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| books |          1 | idx_books_author  |            1 | author      | D         |          11 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+3 rows in set (0.05 sec)
+
+
+
+
+[ drop index index_name on books;]
+--------------------------------------------------------------
+
+
+
+> display empname and deptname of all the emps (emps and depts)
+
+
+
+mysql> explain format = json select e.ename,d.dname from emps e join depts d on d.deptno=e.deptno;
+
+  "query_cost": "2.90"
+
+
+> now we have to create index on both the tables <
+
+mysql> create index idx_emps_deptno on emps(deptno);
+Query OK, 0 rows affected (0.08 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> create index idx_depts_deptno on depts(deptno);
+Query OK, 0 rows affected (0.09 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> explain format = json select e.ename,d.dname from emps e join depts d on d.deptno=e.deptno;
+
+ "query_cost": "2.50"
+
+
+
+mysql> show indexes from emps;
++-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name        | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| emps  |          1 | idx_emps_deptno |            1 | deptno      | A         |           3 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+1 row in set (0.05 sec)
+
+mysql> show indexes from depts;
++-------+------------+------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name         | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| depts |          1 | idx_depts_deptno |            1 | deptno      | A         |           4 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+1 row in set (0.01 sec)
+
+
+		All above where the SIMPLE INDEXES
+=============================================================
+
+
+
+		* UNIQUE INDEX *
+
+- its generally kept on column which has unique elements
+- whenever there is a composite index then, on that index which ever column has sequence as 1 will be also used as the index for the search operation on the column
+
+
+
+
+mysql> explain format = json select * from emps where empno = 4;
+	     "query_cost": "0.75"
+
+
+mysql> create UNIQUE index idx_emps_empno on emps(empno);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> explain format = json select * from emps where empno = 4;
+	 "query_cost": "1.00"
+
+> Query coast increased because
+> unique index is not only meant for searching , that is we cant have duplicate elements in the empno.
+
+> empno is now a Unique key
+	
+> 
+
+
+mysql> desc emps;
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| empno  | int         | YES  | UNI | NULL    |       |
+| ename  | varchar(20) | YES  |     | NULL    |       |
+| deptno | int         | YES  | MUL | NULL    |       |
+| mgr    | int         | YES  |     | NULL    |       |
++--------+-------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> show indexes from emps;
++-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name        | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| emps  |          0 | idx_emps_empno  |            1 | empno       | A         |           5 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| emps  |          1 | idx_emps_deptno |            1 | deptno      | A         |           3 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+-----------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.06 sec)
+
+
+
+> unique keys allow mutiple null values !
+> but can't insert anything that is same.
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+
+		* Composite Indexes *
+
+- index on multiple columns at once is known as composite index
+
+
+------------
+mysql> drop index idx_emp_deptno on emp;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+Example: 
+
+> display all the emps from dept 20 working as Analyst 
+
+
+		--get query cost first--
+1. mysql> explain format = json select * from emp where job = "ANALYST";
+	 "query_cost": "1.65"
+
+2. mysql> explain format = json select * from emp where deptno = "20";
+	"query_cost": "1.65"
+
+3. mysql> explain format = json select * from emp where deptno = "20" and job = "ANALYST";
+	 "query_cost": "1.65"
+	 
+	 
+- index on basis of two columns  called as composite Index
+
+
+mysql> create index idx_emp_deptno_job on emp(deptno, job);
+Query OK, 0 rows affected (0.07 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> explain format = json select * from emp where deptno = "20" and job = "ANALYST";
+	 "query_cost": "0.70"
+
+
+
+mysql> show indexes from emp;
++-------+------------+--------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name           | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+--------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| emp   |          1 | idx_emp_deptno_job |            1 | deptno      | A         |           3 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| emp   |          1 | idx_emp_deptno_job |            2 | job         | A         |           9 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+--------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.05 sec)
+
+
+[ we can see squence_in_index = 1,2 ]
+[ first deptno then go to job ]
+
+- whenever there is a composite index then, on that index which ever column has sequence as 1 will be also used as the index for the search operation on the column
+		
+- create new idx for job , if want search index individually
+
+
+NOw its 
+
+1. mysql> explain format = json select * from emp where job = "ANALYST";
+	 "query_cost": "1.65"
+
+2. mysql> explain format = json select * from emp where deptno = "20";
+	"query_cost": "1.00"
+
+3. mysql> explain format = json select * from emp where deptno = "20" and job = "ANALYST";
+	 "query_cost": "0.70"
+	 
+
+-----------------------------------------------------------------------
+
+mysql> drop index idx_emp_deptno_job on emp;
+Query OK, 0 rows affected (0.06 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+		[we can also define desc asec]
+mysql> create index idx_emp_deptno_job on emp(deptno desc, job);
+Query OK, 0 rows affected (0.07 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+-----------------------------------------------------------------------
+
+
+
+
+In join , we need to put composite indexes on 2 columns if we having 2 quality
+
+
+
+=====================================================================
+
+
+
+		* UNIQUE COMPOSITE INDEX *
+
+- type of index wehere there should be unique values between the combinations of the two values
+
+
+
+---------------------
+
+1. 
+
+mysql> create table student(rollno INT, std INT, name varchar(15),marks DOUBLE);
+Query OK, 0 rows affected (0.03 sec)
+
+
+	( two columns used for uniquely identify other values
+
+mysql> create  UNIQUE INDEX idx_student_rollno_std on student(rollno,std);
+Query OK, 0 rows affected (0.08 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> show indexes from student;
++---------+------------+------------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table   | Non_unique | Key_name               | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++---------+------------+------------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| student |          0 | idx_student_rollno_std |            1 | rollno      | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| student |          0 | idx_student_rollno_std |            2 | std         | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++---------+------------+------------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.06 sec)
+
+			[ Non_unique = 0 , means both are unique now ]
+			[ cardinality null , cuz table is empty ]
+			
+
+mysql> insert into student values(1,1,"Anil",50);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select * from student;
++--------+------+------+-------+
+| rollno | std  | name | marks |
++--------+------+------+-------+
+|      1 |    1 | Anil |    50 |
++--------+------+------+-------+
+1 row in set (0.00 sec)
+
+	
+mysql> select * from student;
++--------+------+--------+-------+
+| rollno | std  | name   | marks |
++--------+------+--------+-------+
+|      1 |    1 | Anil   |    50 |
+|      2 |    1 | Mukesh |    60 |
++--------+------+--------+-------+
+2 rows in set (0.00 sec)
+
+			[rollno and std should be different cuz be made them unique]
+
+mysql> insert into student values(1,1,"Suresh",70);
+ERROR 1062 (23000): Duplicate entry '1-1' for key 'student.idx_student_rollno_std'
+
+
+
+mysql> insert into student values(null,null,"Ramesh",70);
+Query OK, 1 row affected (0.05 sec)
+
+	[ But nulls will be inserted  because its "UNIQUE key"]
+
+
+ysql> insert into student values(null,null,"Ramesh",70);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into student values(null,null,"JAI",30);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> insert into student values(1,null,"TrimI",20);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into student values(1,null,"Vinni",20);
+Query OK, 1 row affected (0.01 sec)
+
+
+
+mysql> select  * from student;
++--------+------+--------+-------+
+| rollno | std  | name   | marks |
++--------+------+--------+-------+
+|      1 |    1 | Anil   |    50 |
+|      2 |    1 | Mukesh |    60 |
+|      1 |    2 | Ramesh |    70 |
+|   NULL | NULL | Ramesh |    70 |
+|   NULL | NULL | JAI    |    30 |
+|      1 | NULL | TrimI  |    20 |
+|      1 | NULL | Vinni  |    20 |
++--------+------+--------+-------+
+7 rows in set (0.00 sec)
+
+
+mysql> update student set std = 2 where name = "TrimI";
+ERROR 1062 (23000): Duplicate entry '1-2' for key 'student.idx_student_rollno_std'
+
+[	during DML operations also it checks , it should be unique for both excepts nulls]
+[	that's why slow also , as it first checks for the duplicate values	]
+
+
+
+
+------------------------------------------------------------------
+
+			* CLUSTRED INDEX *
+			
+- Index that is basically created automatically on the primary key
+- if no primary key then , mysql adds a hidden column ini tour table on which it will keep an index, such index is caled clustered in.			
+			
+- its automatically created on every single table.
+- generally created on primary keys.
+
+- if table doesn't have a primary key, then mysql will create a hidden column in table and on this hidden column it adds the INDEX , and these indexes are known as Clustered index.
+
+- these indexes are unique and no nulls are allowed.
+
+
+
+
+---------
+
+mysql> show indexes from books;
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name          | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| books |          0 | PRIMARY           |            1 | id          | A         |          13 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| books |          1 | idx_books_subject |            1 | subject     | A         |           4 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| books |          1 | idx_books_author  |            1 | author      | D         |          11 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+-------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+3 rows in set (0.00 sec)
+
+
+mysql> desc books;
++---------+-------------+------+-----+---------+-------+
+| Field   | Type        | Null | Key | Default | Extra |
++---------+-------------+------+-----+---------+-------+
+| id      | int         | NO   | PRI | NULL    |       |
+| name    | varchar(50) | YES  |     | NULL    |       |
+| author  | varchar(50) | YES  | MUL | NULL    |       |
+| subject | varchar(50) | YES  | MUL | NULL    |       |
+| price   | float(7,3)  | YES  |     | NULL    |       |
++---------+-------------+------+-----+---------+-------+
+
+PRI  -
+MUL - multiple indexes are applied 		(composite index) 
+					(unique composite index also works with single colum)
+					
+
+
+
+-----------------------------------------------------------
+
+
+	Again Creating / Sourcing Classwork_db
+	
+> 
+
+
+
+
+===================================================================
+
+		========== CONSTRAINTS ===============
+	
+
+- CONSTRAINTS creates indexes internally
+- altering the table in production is not at all recommended
+- so while creating the table you should add the constraints.
+
+
+Type of constraints:-
+	
+			1. NOT NULL	-	[its only the COLUMN LEVEL CONSTRAIN]
+			2. UNIQUE
+			3. PRIMARY KEY	
+			4. FOREIGN KEY
+			5. CHECK
+			6. DEFAULT
+						[others are both COLUMN and TABLE level]
+			
+			
+- constraints can be applied on column level and Table level
+
+TABLE level constraints and column level contraints
+
+create table temp(
+	col1 INT NOT NULL,
+	col2 INT,
+	cik3 UBT UNIQUE
+	UNIQUE(col2));
+	
+	
+----------------------
+
+1. NOL NULL -----------
+
+create table temp1(col1 INT NOT NULL, col2 INT);
+
+mysql> desc temp1;
++-------+------+------+-----+---------+-------+
+| Field | Type | Null | Key | Default | Extra |
++-------+------+------+-----+---------+-------+
+| col1  | int  | NO   |     | NULL    |       |
+| col2  | int  | YES  |     | NULL    |       |
++-------+------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+
+mysql> insert into temp1 values(1,1);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into temp1 values(1,1);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into temp1 values(NULL,1);		[can't be null]
+ERROR 1048 (23000): Column 'col1' cannot be null
+
+
+[col 1 not given so error cuz default is null and we can't have null in col1 ]
+mysql> insert into temp1(col2) values(2);	
+ERROR 1364 (HY000): Field 'col1' doesn't have a default value
+
+	[not null doesn't create indexes , it just checks the null value means its just for DML operation not for DQL operation]
+	
+mysql> show indexes from temp1;
+Empty set (0.00 sec)
+
+
+
+
+-------------------------------------------------------
+
+2. UNIQUE constraints
+
+
+- can't have duplicate values but nulls are allowed , also multiple nulls allowed
+- it create unique index by default  (name of index is same as index name)
+
+
+mysql> create table temp2(col1 int UNIQUE, col2 int, UNIQUE(col2));
+Query OK, 0 rows affected (0.10 sec)
+
+
+mysql> show indexes from temp2;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| temp2 |          0 | col1     |            1 | col1        | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| temp2 |          0 | col2     |            1 | col2        | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.06 sec)
+
+
+mysql> insert into temp2 values(1,1);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into temp2 values(1,1);
+ERROR 1062 (23000): Duplicate entry '1' for key 'temp2.col1'
+
+mysql> insert into temp2 values(null,null);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into temp2 values(null,null);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into temp2 values(2,null);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into temp2 values(2,null);
+ERROR 1062 (23000): Duplicate entry '2' for key 'temp2.col1'
+
+mysql> insert into temp2(col1) values(5);		[adds null in other ]
+Query OK, 1 row affected (0.01 sec)
+
+
+mysql> select * from temp2;
++------+------+
+| col1 | col2 |
++------+------+
+|    1 |    1 |
+| NULL | NULL |
+| NULL | NULL |
+|    2 | NULL |
+|    5 | NULL |
++------+------+
+5 rows in set (0.00 sec)
+
+mysql> update  temp2  set col2 = 1 where col1 =  2;
+ERROR 1062 (23000): Duplicate entry '1' for key 'temp2.col2'
+
+
+
+-- Create table temp3 
+			[NOT NULL UNIQUE = primary key]
+
+mysql> create table temp3(col1 INT NOT NULL UNIQUE, col2 char(10));
+Query OK, 0 rows affected (0.07 sec)
+
+mysql> desc temp3;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| col1  | int      | NO   | PRI | NULL    |       |
+| col2  | char(10) | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> show indexes from temp3;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| temp3 |          0 | col1     |            1 | col1        | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+1 row in set (0.06 sec)
+
+
+mysql> insert into temp3 values(1,"A");
+Query OK, 1 row affected (0.02 sec)
+
+mysql> insert into temp3 values(1,"A");
+ERROR 1062 (23000): Duplicate entry '1' for key 'temp3.col1'
+
+mysql> insert into temp3 values(null,"A");
+ERROR 1048 (23000): Column 'col1' cannot be null
+
+mysql> insert into temp3(col2) values("A");
+ERROR 1364 (HY000): Field 'col1' doesn't have a default value
+
+mysql> insert into temp3(col1) values(4);
+Query OK, 1 row affected (0.07 sec)
+
+mysql> insert into temp3(col1) values(4);
+ERROR 1062 (23000): Duplicate entry '4' for key 'temp3.col1'
+
+
+mysql> select * from temp3;
++------+------+
+| col1 | col2 |
++------+------+
+|    1 | A    |
+|    4 | NULL |
++------+------+
+2 rows in set (0.00 sec)
+
+
+
+
+
+----------------------------------------------------------------------
+
+3. 
+
+mysql> create table temp4(
+    -> col1 int not null,
+    -> col2 char(10),
+    -> unique(col1)			[table level ] - same behaviours as column level
+    -> );
+Query OK, 0 rows affected (0.32 sec)
+
+mysql> desc temp4;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| col1  | int      | NO   | PRI | NULL    |       |
+| col2  | char(10) | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> show indexes from temp4;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| temp4 |          0 | col1     |            1 | col1        | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+1 row in set (0.05 sec)
+
+
+-----------------------------------------------------------------------------
+
+
+
+	* PRIMARY KEY *
+
+	- jo phele aya wo primary key banega
+	- there can be sinlge primary key in table
+
+mysql> create table temp5( col1 int not null UNIQUE, col2 int not null UNIQUE );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> desc temp5;
++-------+------+------+-----+---------+-------+
+| Field | Type | Null | Key | Default | Extra |
++-------+------+------+-----+---------+-------+
+| col1  | int  | NO   | PRI | NULL    |       |
+| col2  | int  | NO   | UNI | NULL    |       |
++-------+------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> show indexes from temp5;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| temp5 |          0 | col1     |            1 | col1        | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| temp5 |          0 | col2     |            1 | col2        | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.06 sec)
+
+
+mysql> insert into temp5 values(1,1);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into temp5 values(1,1);
+ERROR 1062 (23000): Duplicate entry '1' for key 'temp5.col1'
+
+mysql> insert into temp5 values(1,null);
+ERROR 1048 (23000): Column 'col2' cannot be null
+	[its giving name as unique but not is not allowed]
+
+
+
+---------------------------------
+
+
+TABLE level UNIQUE    -    if we want to make two columns combined as unique
+
+
+
+
+mysql> create table student(roll_no INT, std INT, name CHAR(10), marks DOUBLE, UNIQUE(roll_no,std));
+Query OK, 0 rows affected (0.08 sec)
+
+mysql> desc student;
++---------+----------+------+-----+---------+-------+
+| Field   | Type     | Null | Key | Default | Extra |
++---------+----------+------+-----+---------+-------+
+| roll_no | int      | YES  | MUL | NULL    |       |
+| std     | int      | YES  |     | NULL    |       |
+| name    | char(10) | YES  |     | NULL    |       |
+| marks   | double   | YES  |     | NULL    |       |
++---------+----------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> show indexes from student;		[created indexes]
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table   | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| student |          0 | roll_no  |            1 | roll_no     | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| student |          0 | roll_no  |            2 | std         | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.05 sec)
+
+mysql> insert into student value(1,1,"Anil",50);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> insert into student value(1,1,"Anil",50);
+ERROR 1062 (23000): Duplicate entry '1-1' for key 'student.roll_no'
+
+mysql> insert into student value(1,2,"Anil",50);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into student value(1,null,"JAI",50);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into student value(null,null,"JAI",50);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into student value(null,null,"JAI",50);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into student value(1,null,"awesom",40);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from student;
++---------+------+--------+-------+
+| roll_no | std  | name   | marks |
++---------+------+--------+-------+
+|       1 |    1 | Anil   |    50 |
+|       1 |    2 | Anil   |    50 |
+|       1 | NULL | JAI    |    50 |
+|    NULL | NULL | JAI    |    50 |
+|    NULL | NULL | JAI    |    50 |
+|       1 | NULL | JAI    |    50 |
+|       1 | NULL | awesom |    40 |
++---------+------+--------+-------+
+7 rows in set (0.00 sec)
+
+
+
+-----------------------------------------------
+
+
+
+mysql> create table student2(roll_no INT NOT NULL, std INT, name CHAR(10), marks DOUBLE, UNIQUE(roll_no,std));
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> desc student2;
++---------+----------+------+-----+---------+-------+
+| Field   | Type     | Null | Key | Default | Extra |
++---------+----------+------+-----+---------+-------+
+| roll_no | int      | NO   | MUL | NULL    |       |
+| std     | int      | YES  |     | NULL    |       |
+| name    | char(10) | YES  |     | NULL    |       |
+| marks   | double   | YES  |     | NULL    |       |
++---------+----------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> show indexes from student2;
++----------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table    | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++----------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| student2 |          0 | roll_no  |            1 | roll_no     | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| student2 |          0 | roll_no  |            2 | std         | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++----------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.06 sec)		[non unique is FALSE]
+
+
+mysql> insert into student2 value(1,1,"ANIL",50);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into student2 value(1,1,"ANIL",50);
+ERROR 1062 (23000): Duplicate entry '1-1' for key 'student2.roll_no'
+
+mysql> insert into student2 value(1,null,"ANIL",50);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into student2 value(null,null,"ANIL",50);
+ERROR 1048 (23000): Column 'roll_no' cannot be null
+
+
+mysql> desc student3;
++---------+----------+------+-----+---------+-------+
+| Field   | Type     | Null | Key | Default | Extra |
++---------+----------+------+-----+---------+-------+
+| roll_no | int      | NO   | PRI | NULL    |       |
+| std     | int      | NO   | PRI | NULL    |       |
+| name    | char(10) | YES  |     | NULL    |       |
+| marks   | double   | YES  |     | NULL    |       |
++---------+----------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> show indexes from student3;
++----------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table    | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++----------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| student3 |          0 | roll_no  |            1 | roll_no     | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| student3 |          0 | roll_no  |            2 | std         | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++----------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.02 sec)
+		[	COMPOSITE Primary key		]
+
+
+mysql> insert into student3 value(null,null,"ANIL",50);
+ERROR 1048 (23000): Column 'roll_no' cannot be null
+
+mysql> insert into student3 value(1,1,"ANIL",50);
+Query OK, 1 row affected (0.01 sec)
+
+
+mysql> insert into student3(roll_no,name,marks) value(1,"ANIL",50);
+ERROR 1364 (HY000): Field 'std' doesn't have a default value
+
+
+------------------------------------------------------------------------
+
+mysql> select * from student3;
++---------+-----+--------+-------+
+| roll_no | std | name   | marks |
++---------+-----+--------+-------+
+|       1 |   1 | ANIL   |    50 |
+|       2 |   1 | Mukesh |    50 |
++---------+-----+--------+-------+
+2 rows in set (0.00 sec)
+
+mysql> desc student3;
++---------+----------+------+-----+---------+-------+
+| Field   | Type     | Null | Key | Default | Extra |
++---------+----------+------+-----+---------+-------+
+| roll_no | int      | NO   | PRI | NULL    |       |
+| std     | int      | NO   | PRI | NULL    |       |
+| name    | char(10) | YES  |     | NULL    |       |
+| marks   | double   | YES  |     | NULL    |       |
++---------+----------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+one says no null and other says default null
+-> so it must have a value which is not null and unique
+
+NOW,
+
+mysql> insert into student3(std,name,marks) values(1,"suresh",70);
+ERROR 1364 (HY000): Field 'roll_no' doesn't have a default value
+
+mysql> select version();
++-------------------------+
+| version()               |
++-------------------------+
+| 8.0.40-0ubuntu0.22.04.1 |
++-------------------------+
+1 row in set (0.00 sec)
+
+
+mysql> show warnings;
+Empty set (0.00 sec)
+
+
+
+(sometimes sql gives warninig, )
+
+
+
+mysql> show warningss;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'warningss' at line 1
+
+mysql> show warnings;
++-------+------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Level | Code | Message                                                                                                                                                     |
++-------+------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Error | 1064 | You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'warningss' at line 1 |
++-------+------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+
+
+-> if we remove this (ONLY_FULL_GROUP_BY) flag then it will give warning and work even if we dont use group by when using the aggregate funcitons. 
+
+mysql> select @@sql_mode;
++-----------------------------------------------------------------------------------------------------------------------+
+| @@sql_mode                                                                                                            |
++-----------------------------------------------------------------------------------------------------------------------+
+| ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION |
++-----------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+
+
+
+
+mysql> drop tables temp1,temp2,temp3,temp4,temp5;
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> drop table student,student2,student3;
+Query OK, 0 rows affected (0.08 sec)
+
+
+
+===========================================================================
+
+
+
+3. Primary key constraint		
+
+
+	(not null unique -> primary key)
+
+- combination of not null + unique
+- Standards says every row from the table, should be identified uniquely
+- column(s) that is used to indentify every single row uniquely are known as Primary key
+- if no column able to define rows uniq then add a column (not null unique) which can !
+
+
+
+mysql> create table temp1(
+    -> col1 INT PRIMARY KEY,
+    -> col2 char(10));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> desc temp1;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| col1  | int      | NO   | PRI | NULL    |       |
+| col2  | char(10) | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.01 sec)
+
+mysql> show indexes from temp1;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| temp1 |          0 | PRIMARY  |            1 | col1        | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+1 row in set (0.06 sec)		
+	
+[key_name -> PRIMARY]   - it says Primary because here Clustered Index is created automatically
+			- clustered indexes are not null and unique
+
+
+
+mysql> insert into temp1 values(1,"Anil");
+Query OK, 1 row affected (0.06 sec)
+
+mysql> insert into temp1 values(1,"Mukesh");
+ERROR 1062 (23000): Duplicate entry '1' for key 'temp1.PRIMARY'      -[name of clustered index]
+
+mysql> insert into temp1 values(NULL,"Mukesh");
+ERROR 1048 (23000): Column 'col1' cannot be null
+
+mysql> insert into temp1 values(2,"Mukesh");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into temp1(col1) values(3);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select * from temp1;
++------+--------+
+| col1 | col2   |
++------+--------+
+|    1 | Anil   |
+|    2 | Mukesh |
+|    3 | NULL   |
++------+--------+
+3 rows in set (0.00 sec)
+
+mysql> create table temp2( col1 INT, col2 char(10), PRIMARY KEY(col1));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> desc temp2;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| col1  | int      | NO   | PRI | NULL    |       |
+| col2  | char(10) | YES  |     | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> show indexes from temp2;;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| temp2 |          0 | PRIMARY  |            1 | col1        | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+1 row in set (0.05 sec)
+
+
+
+
+--------
+only single column is allowed to be a primary key
+
+mysql> create table temp3(col1 INT Primary key, col2 char(10) Primary key);
+ERROR 1068 (42000): Multiple primary key defined
+
+
+
+mysql> create table temp3(col1 INT Primary key, col2 char(10) not null unique);
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> desc temp3;
++-------+----------+------+-----+---------+-------+
+| Field | Type     | Null | Key | Default | Extra |
++-------+----------+------+-----+---------+-------+
+| col1  | int      | NO   | PRI | NULL    |       |
+| col2  | char(10) | NO   | UNI | NULL    |       |
++-------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+
+
+
+-> So for a table we can have only one primary key but others can be not null and unique
+
+
+---------------------------------
+
+		* COMPOSITE Primary KEY *
+		
+		
+			[internally unique composite key]
+	
+# making multiple column as Primary key
+
+
+mysql> create table student(rollno INT,std INT, name char(40), Primary key (rollno,std));
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> desc student;
++--------+----------+------+-----+---------+-------+
+| Field  | Type     | Null | Key | Default | Extra |
++--------+----------+------+-----+---------+-------+
+| rollno | int      | NO   | PRI | NULL    |       |
+| std    | int      | NO   | PRI | NULL    |       |
+| name   | char(40) | YES  |     | NULL    |       |
++--------+----------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+
+mysql> show indexes from student;
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table   | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| student |          0 | PRIMARY  |            1 | rollno      | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| student |          0 | PRIMARY  |            2 | std         | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.01 sec)
+
+
+
+
+
+
+
+
+

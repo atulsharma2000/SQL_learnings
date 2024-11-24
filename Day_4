@@ -1,0 +1,533 @@
+
+
+======= group functions =======
+
+> multi row functions  - works on multiple rows
+
+
+ (null value  then that row is ignored by the group functions)
+ 	
+
+
+mysql> select count(ename) from emp;
++--------------+
+| count(ename) |
++--------------+
+|           17 |
++--------------+
+1 row in set (0.00 sec)
+
+mysql> select count(*) from emp;
++----------+
+| count(*) |
++----------+
+|       17 |
++----------+
+1 row in set (0.00 sec)
+
+
+
+
+mysql> select distinct count(job) from emp;
++------------+
+| count(job) |
++------------+
+|         14 |
++------------+
+1 row in set (0.00 sec)
+
+
+mysql> select sum(sal) from emp;
++----------+
+| sum(sal) |
++----------+
+| 30025.00 |
++----------+
+1 row in set (0.00 sec)
+
+
+mysql> select max(sal) from emp;
++----------+
+| max(sal) |
++----------+
+|  5000.00 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select avg(sal) from emp;
++-------------+
+| avg(sal)    |
++-------------+
+| 2001.666667 |
++-------------+
+1 row in set (0.00 sec)
+
+
+-- display count of emps who gets the comm
+
+count skips all the null values in the group function
+
++-------------+
+| count(comm) |
++-------------+
+|           5 |
++-------------+
+1 row in set (0.00 sec)
+
+
+--- Advice - apply these function where null is not present ----------
+
+
+mysql> select ename,count(sal) from emp;
+
+ERROR 1140 (42000): In aggregated query without GROUP BY, expression #1 of SELECT list contains nonaggregated column 'classwork_db.emp.ename'; this is incompatible with sql_mode=only_full_group_by
+
+
+Disadvantage of group function :-   (important)
+
+1. aggregated work only with aggregated
+2. we cant select non aggregated cols along with group func
+3. can't do nesting of group functions
+4. can't select group function along with sigle row funcitons
+5. doesnt work in where, so use having clause
+6. rows should be equal
+
+
+Having 
+
+Solution :-
+ 
+( exact number of rows should be there )
+
+For this we use group by clause 
+
+mysql> select deptno,SUM(sal) sum_sal from emp group by deptno;
++--------+----------+
+| deptno | sum_sal  |
++--------+----------+
+|     20 | 10875.00 |
+|     30 |  9400.00 |
+|     10 |  8750.00 |
+|   NULL |  1000.00 |
++--------+----------+
+4 rows in set (0.00 sec)
+( Department by sum of salary )
+
+
+
+mysql> select ename,sal from emp where sal = (select max(sal) from emp);
++-------+---------+
+| ename | sal     |
++-------+---------+
+| KING  | 5000.00 |
++-------+---------+
+1 row in set (0.00 sec)
+
+
+(group by make it same to same rows , so that count can work)
+
+mysql> select job,count(ename) from emp group by job;
++-----------+--------------+
+| job       | count(ename) |
++-----------+--------------+
+| CLERK     |            4 |
+| SALESMAN  |            4 |
+| MANAGER   |            3 |
+| ANALYST   |            2 |
+| PRESIDENT |            1 |
+| NULL      |            3 |
++-----------+--------------+
+6 rows in set (0.00 sec)
+
+
+> get the max of salaries from every single dept
+
+mysql> select deptno,max(sal) as max_sal from emp group by deptno order by max_sal desc;
++--------+---------+
+| deptno | max_sal |
++--------+---------+
+|     10 | 5000.00 |
+|     20 | 3000.00 |
+|     30 | 2850.00 |
+|   NULL | 1000.00 |
++--------+---------+
+4 rows in set (0.00 sec)
+
+
+
+> display count of emp in every dep jobwise
+
+(make sure number of rows are not uneven)
+
+mysql> select deptno,job,count(*) as emp_count from emp group by deptno,job;
++--------+-----------+-----------+
+| deptno | job       | emp_count |
++--------+-----------+-----------+
+|     20 | CLERK     |         2 |
+|     30 | SALESMAN  |         4 |
+|     20 | MANAGER   |         1 |
+|     30 | MANAGER   |         1 |
+|     10 | MANAGER   |         1 |
+|     20 | ANALYST   |         2 |
+|     10 | PRESIDENT |         1 |
+|     30 | CLERK     |         1 |
+|     10 | CLERK     |         1 |
++--------+-----------+-----------+
+9 rows in set (0.00 sec)
+
+
+
+> display deptno which sepends total sal  > 9000
+
+mysql> select deptno, sum(sal) as total_sal from emp group by deptno having total_sal > 9000;
++--------+-----------+
+| deptno | total_sal |
++--------+-----------+
+|     20 |  10875.00 |
+|     30 |   9400.00 |
++--------+-----------+
+2 rows in set (0.00 sec)
+
+
+
+
+
+
+> display the job and its avg sal whose avg sal > 2500
+
+
+mysql> select job, avg(sal) from emp group by job having avg(sal) > 2500;
++-----------+-------------+
+| job       | avg(sal)    |
++-----------+-------------+
+| MANAGER   | 2758.333333 |
+| ANALYST   | 3000.000000 |
+| PRESIDENT | 5000.000000 |
++-----------+-------------+
+3 rows in set (0.00 sec)
+
+
+> display max sal from dept 20 and 30
+
+mysql> select deptno,max(sal) from emp group by deptno having deptno in (20,30);
++--------+----------+
+| deptno | max(sal) |
++--------+----------+
+|     20 |  3000.00 |
+|     30 |  2850.00 |
++--------+----------+
+2 rows in set (0.01 sec)
+
+or
+
+mysql> select deptno,max(sal) from emp where deptno in (20,30)  group by  deptno;
++--------+----------+
+| deptno | max(sal) |
++--------+----------+
+|     20 |  3000.00 |
+|     30 |  2850.00 |
++--------+----------+
+2 rows in set (0.00 sec)
+
+(this one is more efficient -> 
+in having we were also having deptno 10 first then we removed it according to condititon
+IN where clause we only fetch 20 and 30 first then does it max(sal)
+	so less function calling in where )
+	
+- less number of process on rows , the better the performance
+
+
+- only in case of condition on group function, having clause should be used !
+else
+	use where clause as its more efficient !
+
+
+
+
+> display deptno with lowest sal
+
+mysql> select deptno,sum(sal) from emp group by deptno order by sum(sal) limit 1;
++--------+----------+
+| deptno | sum(sal) |
++--------+----------+
+|     10 |  8750.00 |
++--------+----------+
+1 row in set (0.00 sec)
+
+
+>  display the job with highest avg sal
+
+mysql> select job,avg(sal)  from emp group by job order by avg(sal) desc  limit 1;
++-----------+-------------+
+| job       | avg(sal)    |
++-----------+-------------+
+| PRESIDENT | 5000.000000 |
++-----------+-------------+
+1 row in set (0.00 sec)
+
+
+
+===========  JOINS  ====================
+
+tables (emps, meeting, depts, emp_meeting, addr)
+
+
+=> normalization
+
+	- space bhi baccha leta h (give id instead of name and create seperate table as name and its ID as primary key) , basically redundant data  will take extra space so its stored in a seperate data and a relationship is mentained using the primary key or the composite keys.
+	
+	
+
+for many to many relation -> one more table will be created to map the relation , that table will have many to one relation with both the tables that had many to many relation.
+
+
+Types of Join :-
+
+1. Cross join
+2. inner join
+3. left join
+4. right join
+5. full outer join
+6. self join
+
+-----------------------
+1. Cross join
+
+- compares each row of table 1 with every row of table 2
+- yields all possible combinations of tablw 1 and tablw 2
+
+In my sql, larger table is referred as "Driving table", while smaller table is referred as 'Driver table'. Each row of driving tale is combined with every row of driven table
+
+- Cross join is the fastest join , beacuse no condition check involved
+
+Example:-
+
+> mysql> select ename, dname from emps cross join depts;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | ACC   |
+| Amit   | OPS   |
+| Amit   | QA    |
+| Amit   | DEV   |
+| Rahul  | ACC   |
+| Rahul  | OPS   |
+| Rahul  | QA    |
+| Rahul  | DEV   |
+| Nilesh | ACC   |
+| Nilesh | OPS   |
+| Nilesh | QA    |
+| Nilesh | DEV   |
+| Nitin  | ACC   |
+| Nitin  | OPS   |
+| Nitin  | QA    |
+| Nitin  | DEV   |
+| Sarang | ACC   |
+| Sarang | OPS   |
+| Sarang | QA    |
+| Sarang | DEV   |
++--------+-------+
+20 rows in set (0.00 sec)
+
+All possible combinations we get
+
+
+> mysql> select ename,empno, dname,deptno from emps cross join depts;
+ERROR 1052 (23000): Column 'deptno' in field list is ambiguous
+
+(he can't figure from where he should fetch the deptno , as both table has this column)  SO -> emps.deptno or depts.deptno     (both can have diff results)
+
+mysql> select ename,empno, dname,emps.deptno,depts.deptno from emps cross join depts;
++--------+-------+-------+--------+--------+
+| ename  | empno | dname | deptno | deptno |
++--------+-------+-------+--------+--------+
+| Amit   |     1 | ACC   |     10 |     40 |
+| Amit   |     1 | OPS   |     10 |     30 |
+| Amit   |     1 | QA    |     10 |     20 |
+| Amit   |     1 | DEV   |     10 |     10 |
+| Rahul  |     2 | ACC   |     10 |     40 |
+| Rahul  |     2 | OPS   |     10 |     30 |
+| Rahul  |     2 | QA    |     10 |     20 |
+| Rahul  |     2 | DEV   |     10 |     10 |
+| Nilesh |     3 | ACC   |     20 |     40 |
+| Nilesh |     3 | OPS   |     20 |     30 |
+| Nilesh |     3 | QA    |     20 |     20 |
+| Nilesh |     3 | DEV   |     20 |     10 |
+| Nitin  |     4 | ACC   |     50 |     40 |
+| Nitin  |     4 | OPS   |     50 |     30 |
+| Nitin  |     4 | QA    |     50 |     20 |
+| Nitin  |     4 | DEV   |     50 |     10 |
+| Sarang |     5 | ACC   |     50 |     40 |
+| Sarang |     5 | OPS   |     50 |     30 |
+| Sarang |     5 | QA    |     50 |     20 |
+| Sarang |     5 | DEV   |     50 |     10 |
++--------+-------+-------+--------+--------+
+20 rows in set (0.00 sec)
+
+
+
+-----------------------
+2. Inner join			(intersection)
+
+- inner join is used to return rows from both tables that satisfy the join cindition
+- 
+-
+
+with out condition (ON)  > it will work as Cross join
+
+
+mysql> select e.empno, e.ename,e.deptno,d.deptno ,d.dname from emps e inner join depts d on e.deptno = d.deptno;
++-------+--------+--------+--------+-------+
+| empno | ename  | deptno | deptno | dname |
++-------+--------+--------+--------+-------+
+|     1 | Amit   |     10 |     10 | DEV   |
+|     2 | Rahul  |     10 |     10 | DEV   |
+|     3 | Nilesh |     20 |     20 | QA    |
++-------+--------+--------+--------+-------+
+3 rows in set (0.00 sec)
+
+[in Inner join, if condition is checking the = (equality check) then its known as Equi-Join else Non-equi join]
+
+
+
+---------------------------
+3. Left outer join
+
+- it is used to return matching rows from both tables along with aadditional rows in left table
+- cooresponding to additional rows in left table, right table valuesa are taken as nULL
+- 
+
+> display all emps and deptname , display empname even if dept name does not exists
+
+mysql> select e.ename , d.dname from emps e left join depts d on e.deptno = d.deptno;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
+| Nitin  | NULL  |
+| Sarang | NULL  |
++--------+-------+
+5 rows in set (0.00 sec)
+
+
+--------------------------
+4. Right outer join
+(common data and all data from right side table)
+
+mysql> select e.ename , d.dname from emps e right join depts d on e.deptno = d.deptno;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Rahul  | DEV   |
+| Amit   | DEV   |
+| Nilesh | QA    |
+| NULL   | OPS   |
+| NULL   | ACC   |
++--------+-------+
+5 rows in set (0.00 sec)
+
+
+-------------------------
+5. Full outer join
+
+- NOT supported in MYsql but can be simulated using set operators (Union)
+
+- Full join  is used to return matching rows from both tables along with additional rows in both tables
+- corresponding to addtional rows in left or right
+
+
+
+mysql> select e.ename , d.dname from emps e left join depts d on e.deptno = d.deptno
+    -> union all 
+    -> select e.ename , d.dname from emps e right join depts d on e.deptno = d.deptno;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
+| Nitin  | NULL  |
+| Sarang | NULL  |
+| Rahul  | DEV   |
+| Amit   | DEV   |
+| Nilesh | QA    |
+| NULL   | OPS   |
+| NULL   | ACC   |
++--------+-------+
+10 rows in set (0.00 sec)
+
+
+
+EXACT simmulation of full outer join  (Union)
+- no repeated values
+
+mysql> select e.ename , d.dname from emps e left join depts d on e.deptno = d.deptno union  select e.ename , d.dname from emps e right join depts d on e.deptno = d.deptno;
++--------+-------+
+| ename  | dname |
++--------+-------+
+| Amit   | DEV   |
+| Rahul  | DEV   |
+| Nilesh | QA    |
+| Nitin  | NULL  |
+| Sarang | NULL  |
+| NULL   | OPS   |
+| NULL   | ACC   |
++--------+-------+
+7 rows in set (0.01 sec)
+
+
+
+---------------------------
+6. Slef join			(no such keyword , use right or left )
+
+- when join is done on same table, then it is known as self join.
+the both column condition belong to the same table
+
+- self join may be an inner join or outer join
+
+
+mysql> select * from emps;
++-------+--------+--------+------+
+| empno | ename  | deptno | mgr  |
++-------+--------+--------+------+
+|     1 | Amit   |     10 |    4 |
+|     2 | Rahul  |     10 |    3 |
+|     3 | Nilesh |     20 |    4 |
+|     4 | Nitin  |     50 |    5 |
+|     5 | Sarang |     50 | NULL |
++-------+--------+--------+------+
+5 rows in set (0.00 sec)
+
+
+
+mysql> select e.ename as emp_name , m.ename as mgr_name from emps e Inner join emps m on e.mgr = m.empno;
++----------+----------+
+| emp_name | mgr_name |
++----------+----------+
+| Rahul    | Nilesh   |
+| Nilesh   | Nitin    |
+| Amit     | Nitin    |
+| Nitin    | Sarang   |
++----------+----------+
+4 rows in set (0.00 sec)
+
+
+
+mysql> select e.ename as emp_name , m.ename as mgr_name from emps e left join emps m on e.mgr = m.empno;
++----------+----------+
+| emp_name | mgr_name |
++----------+----------+
+| Amit     | Nitin    |
+| Rahul    | Nilesh   |
+| Nilesh   | Nitin    |
+| Nitin    | Sarang   |
+| Sarang   | NULL     |
++----------+----------+
+5 rows in set (0.00 sec)
+
+
+
+
+

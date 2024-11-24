@@ -1,0 +1,414 @@
+mysql -u root -p       <- starting sql
+
+
+we in classword_db , in emp table
+
+- insertion order - data in the table
+
+
+
+SELECT * FROM orders WHERE amt > 1000 ORDER BY odate;
+
+MySQL will:
+Parse and optimize this query.
+Use any applicable indexes on amt to quickly locate rows where amt is greater than 1000.
+Retrieve these rows from disk.
+Sort them by odate in memory before returning them to the client.
+
+
+
+
+==================================
+
+SQL Order of Execution
+FROM/JOIN:
+The database identifies the tables involved and retrieves the necessary data. If there are JOIN operations, these are executed first to combine rows from different tables.
+WHERE:
+The WHERE clause filters the data retrieved from the tables based on specified conditions. Only rows that meet these conditions are retained for further processing.
+GROUP BY:
+If present, this clause groups the filtered data based on one or more columns. Aggregate functions (like COUNT, SUM, etc.) can then be applied to these groups.
+HAVING:
+This clause filters the results of the GROUP BY operation based on specified conditions applied to aggregated data.
+SELECT:
+At this stage, the SELECT clause is executed to determine which columns and expressions will be included in the final result set.
+ORDER BY:
+After the SELECT clause, this clause sorts the resulting data based on one or more specified columns in ascending or descending order.
+LIMIT/OFFSET:
+Finally, if specified, these clauses restrict the number of rows returned by the query and can also skip a certain number of rows.
+
+
+
+SELECT customer_id, SUM(order_amount) AS total_spent
+FROM orders
+WHERE order_date >= '2024-01-01'
+GROUP BY customer_id
+HAVING total_spent > 1000
+ORDER BY total_spent DESC
+LIMIT 10;
+
+================================
+
+limit - limiting number of rows in output
+
+1. dispaly first 5 emps
+mysql> select * from emp limit 5;
+
+
+mysql> select ename,sal,job from emp limit 8;    //limited projection 
+
+mysql> select ename,sal,sal*0.5 as DA from emp limit 6; // computed 
+
+
+
+
+2. Skip starting 5 and project the next 6 records
+mysql> select * from emp Limit 5,6;
+		(skip-5 , get next - 6)
+		
+		
+3. Sort ename based on sal in ascending order  (Order by)
+
+mysql> select ename,sal from emp order by sal;   (by default in asc)
+
+	(select take the data in ram , then on it it perform the sort)
+	
+
+mysql> select ename,sal from emp order by sal desc;   (desc order)
+
+
+mysql> select * from emp order by ename;   (order is changed)
+
+
+4. *dispaly deptno and job sorted on the deptno and jobs in asc order.*
+
+mysql> select deptno, job from emp order by deptno,job;
+	- (first level of sort will be done on deptno then job)
+
+
+5. dispaly only first 7 emp with sal in desc order 
+
+mysql> select ename, sal from emp  order by sal desc limit 7;
+
+(from -> select -> order by)
+
+
+6. dispplay the emp with highest salary
+mysql> select * from emp order by sal limit 1;
+
+7. dispaly emp with lowest sal
+mysql> select ename from emp order by sal limit 1;
+
+8. display second highest sal 
+mysql> select sal from emp order by sal desc limit 1,1;
++---------+
+| sal     |
++---------+
+| 3000.00 |
++---------+
+1 row in set (0.00 sec)
+
+
+
+9. display third highest sal  (second was 3000 and third was 3000 but we need next highest not the same)
+mysql> select distinct  sal from emp order by sal desc limit 2,1;
++---------+
+| sal     |
++---------+
+| 2975.00 |
++---------+
+1 row in set (0.00 sec)
+
+
+
+10. diplay enma,da sorted by da
+mysql> select ename,sal*0.5 DA from emp order by da;
++--------+----------+
+| ename  | DA       |
++--------+----------+
+| SMITH  |  400.000 |
+| JAMES  |  475.000 |
+| ADAMS  |  550.000 |
+| WARD   |  625.000 |
+| MARTIN |  625.000 |
+| MILLER |  650.000 |
+| TURNER |  750.000 |
+| ALLEN  |  800.000 |
+| CLARK  | 1225.000 |
+| BLAKE  | 1425.000 |
+| JONES  | 1487.500 |
+| SCOTT  | 1500.000 |
+| FORD   | 1500.000 |
+| KING   | 2500.000 |
++--------+----------+
+14 rows in set (0.00 sec)
+
+
+( it create table first then it gives name as DA , so now we can use this DA now)
+- order by clause is applied after the table is fetched and created
+
+
+
+# sorting by column numbers
+mysql> select * from emp order by 2;
+
+
+-------------------Where----------------
+
+from->where-> select -> order by
+
+- where caluse also limits the number of rows based on condition
+
+1. display all emps having sal < 2000
+mysql> select * from emp where sal<2000;
+
+
+2.   Data is not case sensitive  
+
+mysql> select * from emp where job = "ANALYST";
+mysql> select * from emp where job = "Analyst";
+mysql> select * from emp where job = 'Analyst';
+
+
+3.   display all the emps with sal > 1200 and working as salesman
+
+mysql> select * from emp where sal > 1200 and job="Salesman";
+
+(this "if condition" is in For loop)
+(where as limit works on data is present)
+
+
+4.  display emp whose not from deptno 30
+mysql> select * from emp where deptno<>30;
+
+
+5.  dispaly all emp whose sal bbet 1000 and 2000
+mysql> select * from emp where sal>1000 and sal<2000;
+
+mysql> select * from emp where sal>=1500 and sal<=3000;
+
+
+mysql> select * from emp where comm is not null;
+
+
+6. display all the employess working either cler or the salesman 
+mysql> select * from emp where job="clerk" or job = "salesman";
+
+
+7. display all the emp who were hired in 1982   (DATE TYPE)
+
+
+mysql> select ename, job, hire  from emp where hire <"1983-1-09" and hire > "1981-12-09" ;
++--------+---------+------------+
+| ename  | job     | hire       |
++--------+---------+------------+
+| SCOTT  | ANALYST | 1982-12-09 |
+| MILLER | CLERK   | 1982-01-23 |
++--------+---------+------------+
+2 rows in set (0.00 sec)
+
+
+
+8. display all emps with comm as null
+
+(cant use relational operators with null)
+
+mysql> select * from emp where comm is null;
+
+
+mysql> select * from emp where comm is not null;
+
+
+<=>  <- operator
+
+mysql> select ename, sal, comm  from emp where comm <=>  null;
++--------+---------+------+
+| ename  | sal     | comm |
++--------+---------+------+
+| SMITH  |  800.00 | NULL |
+| JONES  | 2975.00 | NULL |
+| BLAKE  | 2850.00 | NULL |
+| CLARK  | 2450.00 | NULL |
+| SCOTT  | 3000.00 | NULL |
+| KING   | 5000.00 | NULL |
+| ADAMS  | 1100.00 | NULL |
+| JAMES  |  950.00 | NULL |
+| FORD   | 3000.00 | NULL |
+| MILLER | 1300.00 | NULL |
++--------+---------+------+
+10 rows in set (0.00 sec)
+
+
+9. in <- operator    (simplifying) (used to check equality)
+	can't be used on different column or non-equality stuff
+
+mysql> select * from emp where job in ('clerk','manager') limit 4;
+
++-------+-------+---------+------+------------+---------+------+--------+
+| empno | ename | job     | mgr  | hire       | sal     | comm | deptno |
++-------+-------+---------+------+------------+---------+------+--------+
+|  7369 | SMITH | CLERK   | 7902 | 1980-12-17 |  800.00 | NULL |     20 |
+|  7566 | JONES | MANAGER | 7839 | 1981-04-02 | 2975.00 | NULL |     20 |
+|  7698 | BLAKE | MANAGER | 7839 | 1981-05-01 | 2850.00 | NULL |     30 |
+|  7782 | CLARK | MANAGER | 7839 | 1981-06-09 | 2450.00 | NULL |     10 |
++-------+-------+---------+------+------------+---------+------+--------+
+4 rows in set (0.00 sec)
+ 
+
+
+10. dispaly all emps from dept 10 and 30
+mysql> select * from emp where deptno in (10,30);
+
+
+
+( when columns are different then we cant use apply 'in' to check equality )
+11. display all emps who work in 10 or they are manager
+mysql> select * from emp where deptno=10 or job="manager";
+
+
+
+12. Display details of emps whose name are smiith martin king james
+mysql> select * from emp where ename in ("smith","martin","king","james");
+
+
+13. display all emp who are not manger or salesman
+mysql> select * from emp where job  not  in ("manager","salesman");
+
+
+
+14. display all the emps with sal>=1500 and sal<=3000
+
+mysql> select * from emp where sal  between 1500 and 3000;
+			(both extremes are inclusive)
+	(in cant be used with and so we have between)
+
+15.  dispaly all the emps hired in 1982
+mysql> select * from emp where hire between "1982-01-01" and "1982-12-31";
+
+
+(can't use between cuz different columns)
+16. display all the emps from dept 20 which are working as manager
+
+mysql> select * from emp where deptno=20 and job = "manager";
+
+
+
+17. insert the emp with details
+mysql> insert into emp(empno,ename) values (1,"B"),(2,"J"),(3,"K");
+
+
+-display emp sorted on enames;
+
+
+18. Now we want all those enames which starts with B
+
+partial  ways:
+1) mysql> select ename from emp where ename between "B" and "Jz" order by ename;
+2) mysql> select ename from emp where ename between "B" and "K" and ename !="k";
+
+======
+Correct way:     LIKE operator
+
+two wild card characters:
+	1. % -> represents any number of occurences or empty
+	2. _ -> represents the single occurence
+
+
+1. display all the emps with their names starting with m
+
+mysql> select * from emp where ename like "m%";
+
+
+2. display all where ename ends with H
+mysql> select * from emp where ename like "%h";
+
+
+3. display ename where ename got R in between
+mysql> select * from emp where ename like "%r%";
+
+
+4. display all emps whose ename are exactly of 4 chars
+mysql> select * from emp where ename like "____";
+
+
+5. dispaly all emps who are having second character as A in name
+mysql> select * from emp where ename like "_A%";
+
+
+6. dispalt ename having 2 As in name
+mysql> select * from emp where ename like "%A%A%";
+
+
+7. display all emp whose first letter of name falls btween b and j
+
+mysql> select ename from emp where ename between "B" and "J" or ename like "j%";
+
+
+8. display emp with highest sal between 1000 and 2000
+
+mysql> select * from emp where sal=(select max(sal) from emp where sal between 1000 and 2000);
+or
+mysql> select * from emp where sal between 1000 and 2000 order by sal desc limit 1;
+
+
+9. display only the fifth highest sal 
+mysql> select distinct sal  from emp where sal between 1000 and 2000 order by sal desc limit
+4,1;
+
+
+10. display clerk with lowest sal
+mysql> select * from emp where job="clerk" order by sal limit 1;
+
+
+11. dispaly 2nd highest salary from dept 20 and 30
+mysql> select distinct sal from emp where deptno in (20,30) order by sal desc limit 1,1;
+
+
+===================================================
+
+DML
+
+In dept table
+
+1. change the loc of dept 40 to usa
+mysql> UPDATE dept SET loc= "USA" WHERE deptno = 40;
+
+2. Make sure you provide conditon else if you do this , all will be changed to INDIA
+mysql> update dept set loc ="INDIA";
+
+
+In books table
+
+3. Increase the price of the c prog books by 50
+mysql> update books set price=price+50 where subject = "C programming";
+
+
+
+In emp table
+
+4. set sal 1000 and com = 200 from emp name B
+mysql> update emp set sal = 1000 ,  comm = 200 where ename="B";
+
+
+
+5. delete the deptno 20 from department table
+mysql> delete from dept where deptno =20;
+
+
+=========================================
+(this will remove all the values from table)
+
+-> delete from dept;     
+	DML -  we can roll back (transaction must be started)
+
+-> truncate table books;    D
+	DL - we can't roll back
+	   	[truncate doesnt work with conditions]
+	
+-> Drop table dept; 
+	- DDL   
+	- remove the table structure (whole table - physical file deleted)
+
+
+
+
+

@@ -1,0 +1,1015 @@
+
+=======  SUB Queries ======================
+
+- query inside another query
+
+- used for simplification of the queries
+- less complexity and more readability
+- Joins are faster cuz it get optimization where as sub query doesnt get any optimization as we write it
+
+
+
+
+----------------------------------------------------------
+
+1. display emp with highest sal
+
+
+(problem with this is , that its partial output)  [same result can be there]
+mysql> select * from emp order by sal desc limit 1;
++-------+-------+-----------+------+------------+---------+------+--------+
+| empno | ename | job       | mgr  | hire       | sal     | comm | deptno |
++-------+-------+-----------+------+------------+---------+------+--------+
+|  7839 | KING  | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
++-------+-------+-----------+------+------------+---------+------+--------+
+1 row in set (0.00 sec)
+
+
+# Can't ue group function in where clause
+
+
+
+
+---------New stuff--------------------------
+local varirable in SQL
+mysql> select @max_sal;
++--------------------+
+| @max_sal           |
++--------------------+
+| NULL               |
++--------------------+
+1 row in set (0.00 sec)
+
+
+mysql> set  @max_sal = (select max(sal) from emp);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select @max_sal;
++----------+
+| @max_sal |
++----------+
+|  5000.00 |
++----------+
+1 row in set (0.00 sec)
+
+
+-this variable will be destroyed when exit from sql.
+
+
+mysql> select * from emp where sal = @max_sal;
++-------+-------+-----------+------+------------+---------+------+--------+
+| empno | ename | job       | mgr  | hire       | sal     | comm | deptno |
++-------+-------+-----------+------+------------+---------+------+--------+
+|  7839 | KING  | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
++-------+-------+-----------+------+------------+---------+------+--------+
+1 row in set (0.00 sec)
+
+
+-- better way----
+
+mysql> select * from emp where sal = (select  max(sal) from emp);
++-------+-------+-----------+------+------------+---------+------+--------+
+| empno | ename | job       | mgr  | hire       | sal     | comm | deptno |
++-------+-------+-----------+------+------------+---------+------+--------+
+|  7839 | KING  | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
++-------+-------+-----------+------+------------+---------+------+--------+
+1 row in set (0.00 sec)
+
+
+kNOWSN   AS   SINGLE ROW SUB-QUERY  (return single output)
+
+--------------------------------------------------------------------
+
+
+2. dispaly all emps with second highest sal
+
+
+--partial way--
+
+mysql> select * from emp order by sal desc limit 1,2;
++-------+-------+---------+------+------------+---------+------+--------+
+| empno | ename | job     | mgr  | hire       | sal     | comm | deptno |
++-------+-------+---------+------+------------+---------+------+--------+
+|  7902 | FORD  | ANALYST | 7566 | 1981-12-03 | 3000.00 | NULL |     20 |
+|  7788 | SCOTT | ANALYST | 7566 | 1982-12-09 | 3000.00 | NULL |     20 |
++-------+-------+---------+------+------------+---------+------+--------+
+2 rows in set (0.00 sec)
+
+
+-- better way ---
+
+mysql> select * from emp where sal = (select distinct sal from emp order by sal desc limit 1,1);
++-------+-------+---------+------+------------+---------+------+--------+
+| empno | ename | job     | mgr  | hire       | sal     | comm | deptno |
++-------+-------+---------+------+------------+---------+------+--------+
+|  7788 | SCOTT | ANALYST | 7566 | 1982-12-09 | 3000.00 | NULL |     20 |
+|  7902 | FORD  | ANALYST | 7566 | 1981-12-03 | 3000.00 | NULL |     20 |
++-------+-------+---------+------+------------+---------+------+--------+
+2 rows in set (0.00 sec)
+
+
+
+
+--------------------------------------------------------------------------
+
+3. displa all emps who are in same dept as that of king
+
+mysql> select * from emp where deptno = (select deptno from emp where ename = "king");
++-------+--------+-----------+------+------------+---------+------+--------+
+| empno | ename  | job       | mgr  | hire       | sal     | comm | deptno |
++-------+--------+-----------+------+------------+---------+------+--------+
+|  7782 | CLARK  | MANAGER   | 7839 | 1981-06-09 | 2450.00 | NULL |     10 |
+|  7839 | KING   | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
+|  7934 | MILLER | CLERK     | 7782 | 1982-01-23 | 1300.00 | NULL |     10 |
++-------+--------+-----------+------+------------+---------+------+--------+
+3 rows in set (0.00 sec)
+
+
+--- using join
+
+mysql> select e1.* from emp e1 cross join emp e2 on e1.deptno = e2.deptno where e2.ename = "king";
++-------+--------+-----------+------+------------+---------+------+--------+
+| empno | ename  | job       | mgr  | hire       | sal     | comm | deptno |
++-------+--------+-----------+------+------------+---------+------+--------+
+|  7782 | CLARK  | MANAGER   | 7839 | 1981-06-09 | 2450.00 | NULL |     10 |
+|  7839 | KING   | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
+|  7934 | MILLER | CLERK     | 7782 | 1982-01-23 | 1300.00 | NULL |     10 |
++-------+--------+-----------+------+------------+---------+------+--------+
+3 rows in set (0.00 sec)
+
+
+
+----------------------------------------------------------------------
+
+
+4. display emp having sale less than all the "salesman"
+
+
+mysql> select * from emp where sal < (select min(sal) from emp where job = "SALESMAN" );
++-------+-------+-------+------+------------+---------+------+--------+
+| empno | ename | job   | mgr  | hire       | sal     | comm | deptno |
++-------+-------+-------+------+------------+---------+------+--------+
+|  7369 | SMITH | CLERK | 7902 | 1980-12-17 |  800.00 | NULL |     20 |
+|  7876 | ADAMS | CLERK | 7788 | 1983-01-12 | 1100.00 | NULL |     20 |
+|  7900 | JAMES | CLERK | 7698 | 1981-12-03 |  950.00 | NULL |     30 |
++-------+-------+-------+------+------------+---------+------+--------+
+3 rows in set (0.00 sec)
+
+
+-------------------------------------------------------------
+
+	ANY  ,  ALL       both operators made for subquries 
+
+	----Compulsory need subquery , doesnt work without themm-----
+		- any -> or operation
+		- all -> and operation
+
+
+
+mysql> select * from emp where sal < all(select sal from emp where job = "SALESMAN" );
++-------+-------+-------+------+------------+---------+------+--------+
+| empno | ename | job   | mgr  | hire       | sal     | comm | deptno |
++-------+-------+-------+------+------------+---------+------+--------+
+|  7369 | SMITH | CLERK | 7902 | 1980-12-17 |  800.00 | NULL |     20 |
+|  7876 | ADAMS | CLERK | 7788 | 1983-01-12 | 1100.00 | NULL |     20 |
+|  7900 | JAMES | CLERK | 7698 | 1981-12-03 |  950.00 | NULL |     30 |
++-------+-------+-------+------+------------+---------+------+--------+
+3 rows in set (0.00 sec)
+
+(all checks with all the values)    here  sal < min(sal)
+ 
+
+
+
+
+< any means ---- query will work for any which is less 
+
+
+mysql> select * from emp where sal < any(select sal from emp where job = "SALESMAN" );
++-------+--------+----------+------+------------+---------+---------+--------+
+| empno | ename  | job      | mgr  | hire       | sal     | comm    | deptno |
++-------+--------+----------+------+------------+---------+---------+--------+
+|  7369 | SMITH  | CLERK    | 7902 | 1980-12-17 |  800.00 |    NULL |     20 |
+|  7521 | WARD   | SALESMAN | 7698 | 1981-02-22 | 1250.00 |  500.00 |     30 |
+|  7654 | MARTIN | SALESMAN | 7698 | 1981-09-28 | 1250.00 | 1400.00 |     30 |
+|  7844 | TURNER | SALESMAN | 7698 | 1981-09-08 | 1500.00 |    0.00 |     30 |
+|  7876 | ADAMS  | CLERK    | 7788 | 1983-01-12 | 1100.00 |    NULL |     20 |
+|  7900 | JAMES  | CLERK    | 7698 | 1981-12-03 |  950.00 |    NULL |     30 |
+|  7934 | MILLER | CLERK    | 7782 | 1982-01-23 | 1300.00 |    NULL |     10 |
++-------+--------+----------+------+------------+---------+---------+--------+
+7 rows in set (0.00 sec)
+
+(any checks with any  of the values)    here  sal < max(sal)
+
+
+---------------------
+
+
+5. dsplay emps with the sal less than any if the emmos from dept 20
+
+
+mysql> select * from emp where sal < any(select sal from emp sal where deptno=20);
++-------+--------+----------+------+------------+---------+---------+--------+
+| empno | ename  | job      | mgr  | hire       | sal     | comm    | deptno |
++-------+--------+----------+------+------------+---------+---------+--------+
+|  7369 | SMITH  | CLERK    | 7902 | 1980-12-17 |  800.00 |    NULL |     20 |
+|  7499 | ALLEN  | SALESMAN | 7698 | 1981-02-20 | 1600.00 |  300.00 |     30 |
+|  7521 | WARD   | SALESMAN | 7698 | 1981-02-22 | 1250.00 |  500.00 |     30 |
+|  7566 | JONES  | MANAGER  | 7839 | 1981-04-02 | 2975.00 |    NULL |     20 |
+|  7654 | MARTIN | SALESMAN | 7698 | 1981-09-28 | 1250.00 | 1400.00 |     30 |
+|  7698 | BLAKE  | MANAGER  | 7839 | 1981-05-01 | 2850.00 |    NULL |     30 |
+|  7782 | CLARK  | MANAGER  | 7839 | 1981-06-09 | 2450.00 |    NULL |     10 |
+|  7844 | TURNER | SALESMAN | 7698 | 1981-09-08 | 1500.00 |    0.00 |     30 |
+|  7876 | ADAMS  | CLERK    | 7788 | 1983-01-12 | 1100.00 |    NULL |     20 |
+|  7900 | JAMES  | CLERK    | 7698 | 1981-12-03 |  950.00 |    NULL |     30 |
+|  7934 | MILLER | CLERK    | 7782 | 1982-01-23 | 1300.00 |    NULL |     10 |
++-------+--------+----------+------+------------+---------+---------+--------+
+11 rows in set (0.00 sec)
+
+
+its same as  < max(sal)
+
+mysql> select * from emp where sal < (select max(sal) from emp where deptno=20);
++-------+--------+----------+------+------------+---------+---------+--------+
+| empno | ename  | job      | mgr  | hire       | sal     | comm    | deptno |
++-------+--------+----------+------+------------+---------+---------+--------+
+|  7369 | SMITH  | CLERK    | 7902 | 1980-12-17 |  800.00 |    NULL |     20 |
+|  7499 | ALLEN  | SALESMAN | 7698 | 1981-02-20 | 1600.00 |  300.00 |     30 |
+|  7521 | WARD   | SALESMAN | 7698 | 1981-02-22 | 1250.00 |  500.00 |     30 |
+|  7566 | JONES  | MANAGER  | 7839 | 1981-04-02 | 2975.00 |    NULL |     20 |
+|  7654 | MARTIN | SALESMAN | 7698 | 1981-09-28 | 1250.00 | 1400.00 |     30 |
+|  7698 | BLAKE  | MANAGER  | 7839 | 1981-05-01 | 2850.00 |    NULL |     30 |
+|  7782 | CLARK  | MANAGER  | 7839 | 1981-06-09 | 2450.00 |    NULL |     10 |
+|  7844 | TURNER | SALESMAN | 7698 | 1981-09-08 | 1500.00 |    0.00 |     30 |
+|  7876 | ADAMS  | CLERK    | 7788 | 1983-01-12 | 1100.00 |    NULL |     20 |
+|  7900 | JAMES  | CLERK    | 7698 | 1981-12-03 |  950.00 |    NULL |     30 |
+|  7934 | MILLER | CLERK    | 7782 | 1982-01-23 | 1300.00 |    NULL |     10 |
++-------+--------+----------+------+------------+---------+---------+--------+
+11 rows in set (0.00 sec)
+
+
+--------------------------------------------------------------------
+
+
+6. 
+
+- display dept which have employees
+
+
+mysql> select * from dept where deptno in (select  deptno from emp);
++--------+------------+----------+
+| deptno | dname      | loc      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
++--------+------------+----------+
+3 rows in set (0.00 sec)
+
+mysql> select * from dept where deptno = any(select  deptno from emp);
++--------+------------+----------+
+| deptno | dname      | loc      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
++--------+------------+----------+
+3 rows in set (0.00 sec)
+
+
+
+
+- display dept in which there are no emps
+
+
+mysql> select * from dept where deptno not in (select  deptno from emp);
++--------+------------+--------+
+| deptno | dname      | loc    |
++--------+------------+--------+
+|     40 | OPERATIONS | BOSTON |
++--------+------------+--------+
+1 row in set (0.00 sec)
+
+mysql> select * from dept where deptno != all(select deptno from emp);
++--------+------------+--------+
+| deptno | dname      | loc    |
++--------+------------+--------+
+|     40 | OPERATIONS | BOSTON |
++--------+------------+--------+
+1 row in set (0.00 sec)
+
+
+------------------------------------------------------------------
+
+Problems in sub-query  (low efficieny if we dont optimize it)
+
+
+
+mysql> select * from dept where deptno != ALL(select  deptno from emp);
+	 4 rows				check(4*14)		14 rows
+
+
+----now to make it more efficient-----
+
+
+mysql> select * from dept where deptno != all(select  distinct deptno from emp);
+		3 ROWS		Check (3*3)				3 ROWS
+
++--------+------------+--------+
+| deptno | dname      | loc    |
++--------+------------+--------+
+|     40 | OPERATIONS | BOSTON |
++--------+------------+--------+
+1 row in set (0.00 sec)
+
+	( this is also multi row subquery )
+	
+	
+	
+--------------------------------------------
+
+
+
+mysql> select * from dept where deptno = all(select  deptno from emp);
+
+
+-> for every outer (query)row -> inner row(query) is executed
+	so lets use outer query in inner
+	
+-> when every current row present in outer query , then for those fetched inner query rows depending on the current select row of outer query. 
+	
+	
+====== CORRELATED outer Query=======
+
+
+mysql> select * from dept d where deptno = any(select e.deptno from emp e where e.deptno = d.deptno);			(still fetching more cuz not distinct)
++--------+------------+----------+
+| deptno | dname      | loc      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
++--------+------------+----------+
+3 rows in set (0.00 sec)
+
+
+use distinct or limit to get single value (as for 1 iteration it produces same deptno rows)  -  (Multi row subquery to single row sub-query)
+
+mysql> select * from dept d where deptno = any(select DISTINCT e.deptno from emp e where e.deptno = d.deptno);			(here it gets single row )
+
++--------+------------+----------+
+| deptno | dname      | loc      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
++--------+------------+----------+
+3 rows in set (0.00 sec)
+
+
+
+--- we dont even need to use any
+
+mysql> select * from dept d where deptno = (select distinct e.deptno from emp e where e.deptno = d.deptno);
++--------+------------+----------+
+| deptno | dname      | loc      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
++--------+------------+----------+
+3 rows in set (0.01 sec)
+
+
+
+
+		(Multi row subquery to single row sub-query  done)
+
+- inner query is executed for every single row of outer query ,  thats why slow
+
+- and for optimization we go for correlated sub-query
+	
+	
+	
+	
+mysql> select * from dept d where deptno != all(select distinct e.deptno from emp e where e.deptno = d.deptno);
++--------+------------+--------+
+| deptno | dname      | loc    |
++--------+------------+--------+
+|     40 | OPERATIONS | BOSTON |
++--------+------------+--------+
+1 row in set (0.00 sec)
+	
+--------------------------------------------------------------------------
+	
+	---------EXIST ,  not Exits ------------
+	
+	- it checks if exists then run the outer 
+		distinct bhi nahi chaiye
+		
+(if row is returned by subquery then its true , else for)
+
+
+mysql> select * from dept  where  exists (select distinct deptno from emp);
++--------+------------+----------+
+| deptno | dname      | loc      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
+|     40 | OPERATIONS | BOSTON   |
++--------+------------+----------+
+4 rows in set (0.00 sec)
+	(andar row mile toh bahar wala executed)
+
+
+mysql> select * from dept d  where  exists (select  deptno from emp e where e.deptno=d.deptno);
++--------+------------+----------+
+| deptno | dname      | loc      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
++--------+------------+----------+
+3 rows in set (0.00 sec)
+	(bahar wale ko uske hisab se andar value mil)
+
+
+
+
+mysql> select * from dept d  where not  exists (select  deptno from emp e where e.deptno=d.deptno);
++--------+------------+--------+
+| deptno | dname      | loc    |
++--------+------------+--------+
+|     40 | OPERATIONS | BOSTON |
++--------+------------+--------+
+1 row in set (0.00 sec)
+
+-----------------------------------------------------------------------
+
+
+
+- writing sub-query is easy , but Optimization is the real deal (INTERVIEW)
+
+
+--------------------------------------------------------------------------
+
+
+
+Subquery in the Projection (computed column) :- 
+
+
+1. dept wise count of emps   eg (2/14)
+
+
+mysql> select deptno,concat(count(empno),"/" ,(select count(empno) from emp)) total_emp from emp group by deptno; 
+
++--------+-----------+
+| deptno | total_emp |
++--------+-----------+
+|     20 | 5/14      |
+|     30 | 6/14      |
+|     10 | 3/14      |
++--------+-----------+
+3 rows in set (0.00 sec)
+
+
+-  no need for group by on computed columns
+
+
+-----------------------------------------------------------------------
+
+
+
+Subquery in the FROM clause :- 
+
+
+1. display the emp and their categories
+		- sal < 2000 = poor else  rich
+		
+	
+mysql> select ename,sal,if(sal<2500,"poor","rich") as category from emp;
++--------+---------+----------+
+| ename  | sal     | category |
++--------+---------+----------+
+| SMITH  |  800.00 | poor     |
+| ALLEN  | 1600.00 | poor     |
+| WARD   | 1250.00 | poor     |
+| JONES  | 2975.00 | rich     |
+| MARTIN | 1250.00 | poor     |
+| BLAKE  | 2850.00 | rich     |
+| CLARK  | 2450.00 | poor     |
+| SCOTT  | 3000.00 | rich     |
+| KING   | 5000.00 | rich     |
+| TURNER | 1500.00 | poor     |
+| ADAMS  | 1100.00 | poor     |
+| JAMES  |  950.00 | poor     |
+| FORD   | 3000.00 | rich     |
+| MILLER | 1300.00 | poor     |
++--------+---------+----------+
+14 rows in set (0.00 sec)
+
+
+
+now, Category wise count of employees 
+
+
+mysql> select category , count(ename) FROM
+    -> (select ename,sal,if(sal<2500,"POOR","RICH") as Category FROM emp)
+    -> as emp_category
+    -> Group by category;
+    					(Derived table)
++----------+--------------+
+| Category | count(ename) |
++----------+--------------+
+| POOR     |            9 |
+| RICH     |            5 |
++----------+--------------+
+2 rows in set (0.00 sec)
+
+
+- sub query in from clause if used, creates a table on which we can select ....
+
+
+
+
+
+
+
+2. insert one emp in employess table where departmnet is "operation"
+
+mysql> insert into emps values(1,"atul",(select deptno from dept where dname = "OPERATIONS"),3);
+Query OK, 1 row affected (0.01 sec)
+
+
+- now update the mgr id of all the emps to 5 who work in operation department
+
+mysql> update emps set mgr = 5 where deptno = (select deptno from depts where dname = "OPERATIONS");
+Query OK, 0 rows affected (0.00 sec)
+Rows matched: 0  Changed: 0  Warnings: 0
+
+---galat hai 
+
+- delete emps from opt dept
+
+mysql> delete from emps where deptno - (select deptno from depts where dname = "OPERATIONS");
+Query OK, 0 rows affected (0.00 sec)
+
+
+
+==delete emp with max sal
+
+***( we cannot select the value from the table in the sub-query on which we are having the DML operation )***
+
+mysql> delete from emp where sal = (select max(sal) from emp);
+ERROR 1093 (HY000): You can't specify target table 'emp' for update in FROM clause
+mysql> 
+
+
+
+----to do this
+
+mysql> set @max_sal = (select max(sal) from emp);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> delete from emp where sal = @max_sal;
+Query OK, 1 row affected (0.05 sec)
+
+
+
+---------------------------------------------------
+
+
+
+
+		** query cost on our machine **
+
+- optimization depends on the hardware
+- so query cost can be different pc to pc
+
+Query cost is Unit less , its the combination of time/space complexity etc.
+- more the query cost bad the efficiency
+
+
+
+mysql> EXPLAIN FORMAT = JSON select * from emps;
+
+
+- we get output in json format and cost information
+
+
+
+
+======================================================================
+
+		"" OPTIMIZATION ""
+
+@@  <- mysql  optimizers starts from this 
+
+
+
+====================================================================
+
+
+		" VIEW "
+
+- view is simple projection of data
+- view stores the query in the server (it doesn't store the table)
+- its for simplifying the query
+- view is stored on server in compiled form (so its bit more efficient sub-query)
+
+
+mysql> create view emp_category as Select ename,sal,if(sal<2500,"poor","rich") category from emp;
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> show full tables;
++------------------------+------------+
+| Tables_in_classwork_db | Table_type |
++------------------------+------------+
+| addr                   | BASE TABLE |
+| books                  | BASE TABLE |
+| dept                   | BASE TABLE |
+| depts                  | BASE TABLE |
+| emp                    | BASE TABLE |
+| emp_category           | VIEW       |
+| emp_meeting            | BASE TABLE |
+| emps                   | BASE TABLE |
+| meeting                | BASE TABLE |
+| salgrade               | BASE TABLE |
++------------------------+------------+
+10 rows in set (0.00 sec)
+
+mysql> select * from emp_category;
++--------+---------+----------+
+| ename  | sal     | category |
++--------+---------+----------+
+| SMITH  |  800.00 | poor     |
+| ALLEN  | 1600.00 | poor     |
+| WARD   | 1250.00 | poor     |
+| JONES  | 2975.00 | rich     |
+| MARTIN | 1250.00 | poor     |
+| BLAKE  | 2850.00 | rich     |
+| CLARK  | 2450.00 | poor     |
+| SCOTT  | 3000.00 | rich     |
+| KING   | 5000.00 | rich     |
+| TURNER | 1500.00 | poor     |
+| ADAMS  | 1100.00 | poor     |
+| JAMES  |  950.00 | poor     |
+| FORD   | 3000.00 | rich     |
+| MILLER | 1300.00 | poor     |
++--------+---------+----------+
+14 rows in set (0.00 sec)
+
+
+
+sub-queries also known as In-line view
+
+
+2. display categorywise count of emps using above created view
+
+mysql> select category, count(ename) from emp_category group by category;
++----------+--------------+
+| category | count(ename) |
++----------+--------------+
+| poor     |            9 |
+| rich     |            5 |
++----------+--------------+
+2 rows in set (0.00 sec)
+
+
+----------------------------------------------------------------------
+
+
+Types of views :- 
+
+1. Simple View
+2. Complex View
+
+
+Simple view -  we can look and say that we can perform DML operations, those are simple view
+	all changes in simple view will also be done in main table
+
+Complex views - views where we can't perform DML operation
+
+
+
+-----------
+
+examples--  simple view
+
+mysql> create view  v_emp_Details as select ename,sal,job,deptno from emp;
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> select * from v_emp_Details;
++--------+---------+-----------+--------+
+| ename  | sal     | job       | deptno |
++--------+---------+-----------+--------+
+| SMITH  |  800.00 | CLERK     |     20 |
+| ALLEN  | 1600.00 | SALESMAN  |     30 |
+| WARD   | 1250.00 | SALESMAN  |     30 |
+| JONES  | 2975.00 | MANAGER   |     20 |
+| MARTIN | 1250.00 | SALESMAN  |     30 |
+| BLAKE  | 2850.00 | MANAGER   |     30 |
+| CLARK  | 2450.00 | MANAGER   |     10 |
+| SCOTT  | 3000.00 | ANALYST   |     20 |
+| KING   | 5000.00 | PRESIDENT |     10 |
+| TURNER | 1500.00 | SALESMAN  |     30 |
+| ADAMS  | 1100.00 | CLERK     |     20 |
+| JAMES  |  950.00 | CLERK     |     30 |
+| FORD   | 3000.00 | ANALYST   |     20 |
+| MILLER | 1300.00 | CLERK     |     10 |
++--------+---------+-----------+--------+
+14 rows in set (0.00 sec)
+
+mysql> insert into v_emp_Details values("B",2000,"SALESMAN",20)
+    -> ;
+Query OK, 1 row affected (0.05 sec)
+
+
+it will also be present in the emp table too !!
+>> Here i am able to perform DML operation hence its a Simple view
+
+
+>> drop view name;
+
+
+
+
+----------
+
+examples--  Complex view
+
+
+- DML operations all not possible , as we have computed columns (aggregated funcitons are use)
+- we cant insert , del on this
+
+
+1. create a view for deptwise total sal, max sal, min sal, avg sal , count from emp table
+
+
+mysql> create view v_emp_deptwise_details as select deptno, sum(sal) sum_sal, max(sal) max_sal, min(sal) min_sal, avg(sal) avg_sal, count(ename) count_emp from emp group by deptno;
+
+Query OK, 0 rows affected (0.06 sec)
+
+
+mysql> select * from v_emp_deptwise_details;
++--------+----------+---------+---------+-------------+-----------+
+| deptno | sum_sal  | max_sal | min_sal | avg_sal     | count_emp |
++--------+----------+---------+---------+-------------+-----------+
+|     20 | 12875.00 | 3000.00 |  800.00 | 2145.833333 |         6 |
+|     30 |  9400.00 | 2850.00 |  950.00 | 1566.666667 |         6 |
+|     10 |  8750.00 | 5000.00 | 1300.00 | 2916.666667 |         3 |
++--------+----------+---------+---------+-------------+-----------+
+3 rows in set (0.00 sec)
+
+mysql> insert into v_emp_deptwise_details(deptno)  values(1);
+ERROR 1471 (HY000): The target table v_emp_deptwise_details of the INSERT is not insertable-into
+
+
+
+-- we are not able to perform DML operations on this , hence it is a complex view
+
+
+=======================================================================================
+
+
+
+3. create view with all emps havign sal > 2500 , need empno,name,sal
+
+mysql> create view v_rich_emp  as select empno,ename,sal from emp where sal > 2500;
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> select * from v_rich_emp;
++-------+-------+---------+
+| empno | ename | sal     |
++-------+-------+---------+
+|  7566 | JONES | 2975.00 |
+|  7698 | BLAKE | 2850.00 |
+|  7788 | SCOTT | 3000.00 |
+|  7839 | KING  | 5000.00 |
+|  7902 | FORD  | 3000.00 |
++-------+-------+---------+
+5 rows in set (0.00 sec)
+
+
+-- now insert detail in view (8000,"J",1800)
+
+
+mysql> insert into v_rich_emp(empno,ename,sal) values(8000,"J",1800);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select * from emp;
++-------+--------+-----------+------+------------+---------+---------+--------+
+| empno | ename  | job       | mgr  | hire       | sal     | comm    | deptno |
++-------+--------+-----------+------+------------+---------+---------+--------+
+|  7369 | SMITH  | CLERK     | 7902 | 1980-12-17 |  800.00 |    NULL |     20 |
+|  7499 | ALLEN  | SALESMAN  | 7698 | 1981-02-20 | 1600.00 |  300.00 |     30 |
+|  7521 | WARD   | SALESMAN  | 7698 | 1981-02-22 | 1250.00 |  500.00 |     30 |
+|  7566 | JONES  | MANAGER   | 7839 | 1981-04-02 | 2975.00 |    NULL |     20 |
+|  7654 | MARTIN | SALESMAN  | 7698 | 1981-09-28 | 1250.00 | 1400.00 |     30 |
+|  7698 | BLAKE  | MANAGER   | 7839 | 1981-05-01 | 2850.00 |    NULL |     30 |
+|  7782 | CLARK  | MANAGER   | 7839 | 1981-06-09 | 2450.00 |    NULL |     10 |
+|  7788 | SCOTT  | ANALYST   | 7566 | 1982-12-09 | 3000.00 |    NULL |     20 |
+|  7839 | KING   | PRESIDENT | NULL | 1981-11-17 | 5000.00 |    NULL |     10 |
+|  7844 | TURNER | SALESMAN  | 7698 | 1981-09-08 | 1500.00 |    0.00 |     30 |
+|  7876 | ADAMS  | CLERK     | 7788 | 1983-01-12 | 1100.00 |    NULL |     20 |
+|  7900 | JAMES  | CLERK     | 7698 | 1981-12-03 |  950.00 |    NULL |     30 |
+|  7902 | FORD   | ANALYST   | 7566 | 1981-12-03 | 3000.00 |    NULL |     20 |
+|  7934 | MILLER | CLERK     | 7782 | 1982-01-23 | 1300.00 |    NULL |     10 |
+|  NULL | B      | SALESMAN  | NULL | NULL       | 2000.00 |    NULL |     20 |
+|  8000 | J      | NULL      | NULL | NULL       | 1800.00 |    NULL |   NULL |
++-------+--------+-----------+------+------------+---------+---------+--------+
+16 rows in set (0.00 sec)
+
+mysql> select * from v_rich_emp;
++-------+-------+---------+
+| empno | ename | sal     |
++-------+-------+---------+
+|  7566 | JONES | 2975.00 |
+|  7698 | BLAKE | 2850.00 |
+|  7788 | SCOTT | 3000.00 |
+|  7839 | KING  | 5000.00 |
+|  7902 | FORD  | 3000.00 |
++-------+-------+---------+
+5 rows in set (0.00 sec)
+
+
+
+
+--- now insert INTO the table  (8001,"K",3800)        inserting > 2500
+
+
+mysql> insert into emp(empno,ename,sal) values(8001,"K",3800);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from v_rich_emp;
++-------+-------+---------+
+| empno | ename | sal     |
++-------+-------+---------+
+|  7566 | JONES | 2975.00 |
+|  7698 | BLAKE | 2850.00 |
+|  7788 | SCOTT | 3000.00 |
+|  7839 | KING  | 5000.00 |
+|  7902 | FORD  | 3000.00 |
+|  8001 | K     | 3800.00 |
++-------+-------+---------+
+6 rows in set (0.01 sec)
+
+mysql> select * from emp;
++-------+--------+-----------+------+------------+---------+---------+--------+
+| empno | ename  | job       | mgr  | hire       | sal     | comm    | deptno |
++-------+--------+-----------+------+------------+---------+---------+--------+
+|  7369 | SMITH  | CLERK     | 7902 | 1980-12-17 |  800.00 |    NULL |     20 |
+|  7499 | ALLEN  | SALESMAN  | 7698 | 1981-02-20 | 1600.00 |  300.00 |     30 |
+|  7521 | WARD   | SALESMAN  | 7698 | 1981-02-22 | 1250.00 |  500.00 |     30 |
+|  7566 | JONES  | MANAGER   | 7839 | 1981-04-02 | 2975.00 |    NULL |     20 |
+|  7654 | MARTIN | SALESMAN  | 7698 | 1981-09-28 | 1250.00 | 1400.00 |     30 |
+|  7698 | BLAKE  | MANAGER   | 7839 | 1981-05-01 | 2850.00 |    NULL |     30 |
+|  7782 | CLARK  | MANAGER   | 7839 | 1981-06-09 | 2450.00 |    NULL |     10 |
+|  7788 | SCOTT  | ANALYST   | 7566 | 1982-12-09 | 3000.00 |    NULL |     20 |
+|  7839 | KING   | PRESIDENT | NULL | 1981-11-17 | 5000.00 |    NULL |     10 |
+|  7844 | TURNER | SALESMAN  | 7698 | 1981-09-08 | 1500.00 |    0.00 |     30 |
+|  7876 | ADAMS  | CLERK     | 7788 | 1983-01-12 | 1100.00 |    NULL |     20 |
+|  7900 | JAMES  | CLERK     | 7698 | 1981-12-03 |  950.00 |    NULL |     30 |
+|  7902 | FORD   | ANALYST   | 7566 | 1981-12-03 | 3000.00 |    NULL |     20 |
+|  7934 | MILLER | CLERK     | 7782 | 1982-01-23 | 1300.00 |    NULL |     10 |
+|  NULL | B      | SALESMAN  | NULL | NULL       | 2000.00 |    NULL |     20 |
+|  8000 | J      | NULL      | NULL | NULL       | 1800.00 |    NULL |   NULL |
+|  8001 | K      | NULL      | NULL | NULL       | 3800.00 |    NULL |   NULL |
++-------+--------+-----------+------+------------+---------+---------+--------+
+17 rows in set (0.00 sec)
+
+
+so , view is just a query ,  query is fired when we select the view
+
+	- projection is not stored on servers, only query is stored thats why updated results.
+
+
+--------------------------------------------------------------------
+
+
+# Restriction in view    		[	CHECK OPTION	] 
+
+
+eg. suppose we want condition that input should be > 2500
+
+mysql> ALTER VIEW v_rich_emp as SELECT empno,ename,sal FROM emp WHERE sal > 2500 with CHECK OPTION;
+
+Query OK, 0 rows affected (0.06 sec)
+
+
+mysql> insert into v_rich_emp values(8003,"g",1600);			ERROr: sal !> 2500
+ERROR 1369 (HY000): CHECK OPTION failed 'classwork_db.v_rich_emp'
+
+
+
+mysql> insert into v_rich_emp values(8003,"Z",2600);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from v_rich_emp;
++-------+-------+---------+
+| empno | ename | sal     |
++-------+-------+---------+
+|  7566 | JONES | 2975.00 |
+|  7698 | BLAKE | 2850.00 |
+|  7788 | SCOTT | 3000.00 |
+|  7839 | KING  | 5000.00 |
+|  7902 | FORD  | 3000.00 |
+|  8001 | K     | 3800.00 |
+|  8003 | Z     | 2600.00 |
++-------+-------+---------+
+7 rows in set (0.00 sec)
+
+
+
+------------------------------------------------------------------------------
+
+
+We can Create a view on another view
+
+
+mysql> create view v_rich_emp_2 as
+    -> select ename,sal from v_rich_emp where sal > 3000;
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> select * from v_rich_emp_2;
++-------+---------+
+| ename | sal     |
++-------+---------+
+| KING  | 5000.00 |
+| K     | 3800.00 |
++-------+---------+
+2 rows in set (0.00 sec)
+
+
+
+
+
+>> now if we drop the neste view , then this query will give error
+
+mysql> drop view v_rich_emp;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> select * from v_rich_emp_2;
+ERROR 1356 (HY000): View 'classwork_db.v_rich_emp_2' references invalid table(s) or column(s) or function(s) or definer/invoker of view lack rights to use them
+
+
+mysql> drop view v_rich_emp_2;
+Query OK, 0 rows affected (0.05 sec)
+
+
+
+>> if we drop the table then views will work ?   -> NO 
+
+
+------------------------------------------------------------------------------
+
+
+ques:  display all the emps from the DEV dept
+
+
+THIS IS HOW WE CAN USE VIEWS  as per requirement
+
+
+mysql> create view v_emp_dept as select e.empno,e.ename,d.deptno,d.dname from emps e JOIN depts d on e.deptno = d.deptno ;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> select * from v_emp_dept;
++-------+--------+--------+-------+
+| empno | ename  | deptno | dname |
++-------+--------+--------+-------+
+|     1 | Amit   |     10 | DEV   |
+|     2 | Rahul  |     10 | DEV   |
+|     3 | Nilesh |     20 | QA    |
++-------+--------+--------+-------+
+3 rows in set (0.01 sec)
+
+
+mysql> select * from v_emp_dept where dname= "dev";
++-------+-------+--------+-------+
+| empno | ename | deptno | dname |
++-------+-------+--------+-------+
+|     1 | Amit  |     10 | DEV   |
+|     2 | Rahul |     10 | DEV   |
++-------+-------+--------+-------+
+2 rows in set (0.00 sec)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

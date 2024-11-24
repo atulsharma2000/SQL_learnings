@@ -1,0 +1,308 @@
+Tip -> start applying join on 2 and run it and check for next
+
+
+
+
+mysql> select e.ename,m.meetno,meet.venue from emp_meeting m Inner join  emps e on e.empno=m.empno join meeting meet on meet.meetno=m.meetno ;
++--------+--------+-------------------+
+| ename  | meetno | venue             |
++--------+--------+-------------------+
+| Amit   |    300 | Co-director Cabin |
+| Amit   |    200 | Board Room        |
+| Rahul  |    300 | Co-director Cabin |
+| Rahul  |    200 | Board Room        |
+| Nilesh |    200 | Board Room        |
+| Nilesh |    100 | Director Cabin    |
+| Nitin  |    300 | Co-director Cabin |
+| Nitin  |    200 | Board Room        |
+| Nitin  |    100 | Director Cabin    |
+| Sarang |    200 | Board Room        |
++--------+--------+-------------------+
+10 rows in set (0.01 sec)
+
+
+
+
+
+=======================
+
+
+1. display the empno name and deptname of all the emp
+
+mysql> select e.empno, d.deptno from emps e join depts d on e.deptno=d.deptno;
++-------+--------+
+| empno | deptno |
++-------+--------+
+|     1 |     10 |
+|     2 |     10 |
+|     3 |     20 |
++-------+--------+
+3 rows in set (0.01 sec)
+
+-- to get all empno even if they dont have deptno
+
+mysql> select e.empno, d.deptno from emps e left join depts d on e.deptno=d.deptno;
++-------+--------+
+| empno | deptno |
++-------+--------+
+|     1 |     10 |
+|     2 |     10 |
+|     3 |     20 |
+|     4 |   NULL |
+|     5 |   NULL |
++-------+--------+
+5 rows in set (0.00 sec)
+
+
+2. dispaly emp name , dept name and district of all emps
+
+mysql> select e.ename, d.dname , dis.dist from emps e  left join depts d on e.deptno = d.deptno join addr dis on dis.empno = e.empno;
++--------+-------+----------+
+| ename  | dname | dist     |
++--------+-------+----------+
+| Amit   | DEV   | Kolhapur |
+| Rahul  | DEV   | Satara   |
+| Nilesh | QA    | Pune     |
+| Nitin  | NULL  | Satara   |
+| Sarang | NULL  | Satara   |
++--------+-------+----------+
+5 rows in set (0.00 sec)
+
+
+
+3.  display ename, meetno, topic
+
+mysql> select e.ename,m.meetno,meet.topic from emp_meeting m Inner join  emps e on e.empno=m.empno join meeting meet on meet.meetno=m.meetno;
++--------+--------+-------------+
+| ename  | meetno | topic       |
++--------+--------+-------------+
+| Amit   |    300 | App Design  |
+| Amit   |    200 | Annual meet |
+| Rahul  |    300 | App Design  |
+| Rahul  |    200 | Annual meet |
+| Nilesh |    200 | Annual meet |
+| Nilesh |    100 | Scheduling  |
+| Nitin  |    300 | App Design  |
+| Nitin  |    200 | Annual meet |
+| Nitin  |    100 | Scheduling  |
+| Sarang |    200 | Annual meet |
++--------+--------+-------------+
+10 rows in set (0.00 sec)
+
+
+
+4. display empname attendint the meetings with there topics and from where they are travelling
+
+
+mysql> select e.ename, meet.topic , a.dist from emp_meeting em JOIN emps e on e.empno = em.empno join meeting meet on em.meetno=meet.meetno  JOIN  addr a on em.empno = a.empno;
++--------+-------------+----------+
+| ename  | topic       | dist     |
++--------+-------------+----------+
+| Amit   | Annual meet | Kolhapur |
+| Amit   | App Design  | Kolhapur |
+| Rahul  | Annual meet | Satara   |
+| Rahul  | App Design  | Satara   |
+| Nilesh | Scheduling  | Pune     |
+| Nilesh | Annual meet | Pune     |
+| Nitin  | Scheduling  | Satara   |
+| Nitin  | Annual meet | Satara   |
+| Nitin  | App Design  | Satara   |
+| Sarang | Annual meet | Satara   |
++--------+-------------+----------+
+10 rows in set (0.00 sec)
+
+mysql> select e.ename,m.topic,a.dist from emps e
+    -> INNER JOIN emp_meeting em on e.empno = em.empno
+    -> INNER JOIN meeting m on em.meetno = m.meetno
+    -> INNER JOIN addr a on e.empno = a.empno;
++--------+-------------+----------+
+| ename  | topic       | dist     |
++--------+-------------+----------+
+| Amit   | Annual meet | Kolhapur |
+| Amit   | App Design  | Kolhapur |
+| Rahul  | Annual meet | Satara   |
+| Rahul  | App Design  | Satara   |
+| Nilesh | Scheduling  | Pune     |
+| Nilesh | Annual meet | Pune     |
+| Nitin  | Scheduling  | Satara   |
+| Nitin  | Annual meet | Satara   |
+| Nitin  | App Design  | Satara   |
+| Sarang | Annual meet | Satara   |
++--------+-------------+----------+
+10 rows in set (0.00 sec)
+
+
+
+
+5. display empname  attending the meeting witht heir topics and their depts names
+
+mysql> select e.ename, m.topic, d.dname from emp_meeting em  JOIN emps e on e.empno = em.empno JOIN meeting m on m.meetno = em.meetno left JOIN depts d on e.deptno = d.deptno;
++--------+-------------+-------+
+| ename  | topic       | dname |
++--------+-------------+-------+
+| Amit   | App Design  | DEV   |
+| Amit   | Annual meet | DEV   |
+| Rahul  | App Design  | DEV   |
+| Rahul  | Annual meet | DEV   |
+| Nilesh | Annual meet | QA    |
+| Nilesh | Scheduling  | QA    |
+| Nitin  | App Design  | NULL  |
+| Nitin  | Annual meet | NULL  |
+| Nitin  | Scheduling  | NULL  |
+| Sarang | Annual meet | NULL  |
++--------+-------------+-------+
+10 rows in set (0.00 sec)
+
+
+(LEFT lena h , make sure you read the query carefully)
+
+
+
+
+6.  display empname  attending the meeting with their topics and their depts names and from where they are travelling
+
+mysql> select e.ename, m.topic, d.dname ,addr.dist  from emp_meeting em  JOIN emps e on e.empno = em.empno JOIN meeting m on m.meetno = em.meetno left JOIN depts d on e.deptno = d.deptno join addr on addr.empno = em.empno;
++--------+-------------+-------+----------+
+| ename  | topic       | dname | dist     |
++--------+-------------+-------+----------+
+| Amit   | Annual meet | DEV   | Kolhapur |
+| Amit   | App Design  | DEV   | Kolhapur |
+| Rahul  | Annual meet | DEV   | Satara   |
+| Rahul  | App Design  | DEV   | Satara   |
+| Nilesh | Scheduling  | QA    | Pune     |
+| Nilesh | Annual meet | QA    | Pune     |
+| Nitin  | Scheduling  | NULL  | Satara   |
+| Nitin  | Annual meet | NULL  | Satara   |
+| Nitin  | App Design  | NULL  | Satara   |
+| Sarang | Annual meet | NULL  | Satara   |
++--------+-------------+-------+----------+
+10 rows in set (0.01 sec)
+
+
+7. dispaly yhe deptname and count of employess in that depts
+
+mysql> select d.dname, count(e.empno) from depts d left JOIN emps e on e.deptno = d.deptno group by d.dname ;
++-------+----------------+
+| dname | count(e.empno) |
++-------+----------------+
+| DEV   |              2 |
+| QA    |              1 |
+| OPS   |              0 |
+| ACC   |              0 |
++-------+----------------+
+4 rows in set (0.00 sec)
+
+(we made dname aggregated by puting in group by)
+
+
+better
+
+mysql> select d.dname, count(e.empno) from depts d left JOIN emps e on e.deptno = d.deptno group by d.dname union select d.dname, count(e.empno) from emps e left Join depts d on e.deptno = d.deptno group by d.dname;
++-------+----------------+
+| dname | count(e.empno) |
++-------+----------------+
+| DEV   |              2 |
+| QA    |              1 |
+| OPS   |              0 |
+| ACC   |              0 |
+| NULL  |              2 |
++-------+----------------+
+5 rows in set (0.00 sec)
+
+
+
+8. dispaly empname and his number of meeting attended , meeting count in desc order.
+
+mysql> select e.ename , count(em.meetno) from emp_meeting em Join emps e on e.empno=em.empno group by e.ename order by count(em.meetno) desc;
++--------+------------------+
+| ename  | count(em.meetno) |
++--------+------------------+
+| Nitin  |                3 |
+| Nilesh |                2 |
+| Amit   |                2 |
+| Rahul  |                2 |
+| Sarang |                1 |
++--------+------------------+
+5 rows in set (0.00 sec)
+
+
+add district too
+
+mysql> select e.ename , count(em.meetno),a.dist from emp_meeting em right Join emps e on e.empno=em.empno join addr a on a.empno=em.emp
+no group by e.ename,a.dist order by count(em.meetno) desc;
++--------+------------------+----------+
+| ename  | count(em.meetno) | dist     |
++--------+------------------+----------+
+| Nitin  |                3 | Satara   |
+| Nilesh |                2 | Pune     |
+| Amit   |                2 | Kolhapur |
+| Rahul  |                2 | Satara   |
+| Sarang |                1 | Satara   |
++--------+------------------+----------+
+5 rows in set (0.00 sec)
+
+
+Projection sarre  ->> group by me daal bhai
+
+
+
+9. disaply the emps from dev department
+
+mysql> select e.*,d.dname from emps e join depts d on e.deptno = d.deptno where d.dname ="dev";
++-------+-------+--------+------+-------+
+| empno | ename | deptno | mgr  | dname |
++-------+-------+--------+------+-------+
+|     1 | Amit  |     10 |    4 | DEV   |
+|     2 | Rahul |     10 |    3 | DEV   |
++-------+-------+--------+------+-------+
+2 rows in set (0.00 sec)
+
+
+10. display emp names who are attending more than 2 meetings
+
+mysql> select e.ename, count(em.empno) from emps e JOIN emp_meeting as em on e.empno=em.empno group by e.ename having count(em.empno) >
+ 2;
++-------+-----------------+
+| ename | count(em.empno) |
++-------+-----------------+
+| Nitin |               3 |
++-------+-----------------+
+1 row in set (0.00 sec)
+
+
+
+mysql> select e.ename from emps e JOIN emp_meeting as em on e.empno=em.empno group by e.ename having count(em.empno) > 2;
++-------+
+| ename |
++-------+
+| Nitin |
++-------+
+1 row in set (0.00 sec)
+
+
+
+=================
+
+------ORDER of Clauses---------
+
+
+SELECT  col1, col2 
+FROM 	table 1
+JOIN	table2   ON  condition
+JOIN	table3	ON	condition
+WHERE	condition
+GROUP BY	col1,col2
+HAVING		condition in group clause
+ORDER BY	col  asc/desc
+LIMIT 		(n) / (n,n)
+;
+
+
+
+
+
+
+
+
+
+
