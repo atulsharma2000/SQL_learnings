@@ -18,7 +18,7 @@ Sort them by odate in memory before returning them to the client.
 
 
 
-==================================
+=====================================================
 
 SQL Order of Execution
 FROM/JOIN:
@@ -46,7 +46,8 @@ HAVING total_spent > 1000
 ORDER BY total_spent DESC
 LIMIT 10;
 
-================================
+====================================================
+
 
 limit - limiting number of rows in output
 
@@ -152,7 +153,7 @@ mysql> select ename,sal*0.5 DA from emp order by da;
 mysql> select * from emp order by 2;
 
 
--------------------Where----------------
+-------------------Where----------------===================================
 
 from->where-> select -> order by
 
@@ -363,7 +364,7 @@ mysql> select * from emp where job="clerk" order by sal limit 1;
 mysql> select distinct sal from emp where deptno in (20,30) order by sal desc limit 1,1;
 
 
-===================================================
+===================================================================================================
 
 DML
 
@@ -394,7 +395,7 @@ mysql> update emp set sal = 1000 ,  comm = 200 where ename="B";
 mysql> delete from dept where deptno =20;
 
 
-=========================================
+=====================================================================================================
 (this will remove all the values from table)
 
 -> delete from dept;     
@@ -409,6 +410,6 @@ mysql> delete from dept where deptno =20;
 	- remove the table structure (whole table - physical file deleted)
 
 
-
+===================================================================================================
 
 

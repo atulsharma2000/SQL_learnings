@@ -562,7 +562,7 @@ mysql> select ename from emp where left(ename,1) between "B" and "J";
 
 
 
---------------SubString----------------------
+--------------SubString------------------
 
 
 Examples:

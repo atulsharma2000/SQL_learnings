@@ -1,0 +1,1424 @@
+
+Surrogate primary key
+foreign key
+check
+
+=======================================
+
+
+Primary key - constraint that can be applied on column or multiple columns , if its a primary key then it can't have non unique values and value can't be null. Primary key is used to identify each and every row uniquely.
+we can have single primary for a table (it can be simple or composite primary key)
+
+
+		== Surrogate Primary key == 
+		
+		keywords
+	mysql - auto_increment
+	oracle	- sequences
+	ms_sql	- identity
+		
+		
+- key that helps primary key to product unique + not null values autom
+atically
+- highest value + 1 is assigned to the new value 
+
+keyword:
+AUTO INCREMENT -  its a auto generator in mysql 
+			it automatically generate unique values which are not null
+
+
+example: 
+
+mysql> Create table temp5(id int primary key AUTO_INCREMENT, name char(15));
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> insert into temp5(name) values("Anil");
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select * from temp5;
++----+------+
+| id | name |
++----+------+
+|  1 | Anil |			       [primary key auto generated for name]
++----+------+
+1 row in set (0.00 sec)
+
+mysql> insert into temp5(name) values("Mukesh");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into temp5(name) values("Ramesh");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from temp5;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | Anil   |
+|  2 | Mukesh |
+|  3 | Ramesh |
++----+--------+
+3 rows in set (0.00 sec)
+
+
+
+mysql> insert into temp5 values(10,"Ramesh");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into temp5(name) values("Atul");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into temp5(name) values("awesoe");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select * from temp5;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | Anil   |
+|  2 | Mukesh |
+|  3 | Ramesh |
+| 10 | Ramesh |			[ We got the highest value auto incremented ]
+| 11 | Atul   |
+| 12 | awesoe |
++----+--------+
+6 rows in set (0.00 sec)
+
+
+[ we can give inbetween value too but for next auto , it will still give the highest + 1]
+
+
+mysql> insert into temp5 values(5,"Jai");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into temp5(name) values("Pingu");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from temp5;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | Anil   |
+|  2 | Mukesh |
+|  3 | Ramesh |
+|  5 | Jai    |
+| 10 | Ramesh |
+| 11 | Atul   |
+| 12 | awesoe |
+| 13 | Pingu  |
++----+--------+
+8 rows in set (0.00 sec)
+
+---------------------------
+
+we can also set , if we want auto increment according to our need
+
+
+
+mysql> alter table temp5 AUTO_INCREMENT = 1001;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> select * from temp5;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | Anil   |
+|  2 | Mukesh |
+|  3 | Ramesh |
+|  5 | Jai    |
+| 10 | Ramesh |
+| 11 | Atul   |
+| 12 | awesoe |
+| 13 | Pingu  |
++----+--------+
+8 rows in set (0.00 sec)
+
+mysql> insert into temp5(name) values("tingi");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select * from temp5;
++------+--------+
+| id   | name   |
++------+--------+
+|    1 | Anil   |
+|    2 | Mukesh |
+|    3 | Ramesh |
+|    5 | Jai    |
+|   10 | Ramesh |
+|   11 | Atul   |
+|   12 | awesoe |
+|   13 | Pingu  |
+| 1001 | tingi  |			[now we will get from 1001]
++------+--------+
+9 rows in set (0.00 sec)
+
+
+
+
+mysql> desc temp5;			[we can see if auto increment is applied or not]
++-------+----------+------+-----+---------+----------------+
+| Field | Type     | Null | Key | Default | Extra          |
++-------+----------+------+-----+---------+----------------+
+| id    | int      | NO   | PRI | NULL    | auto_increment |
+| name  | char(15) | YES  |     | NULL    |                |
++-------+----------+------+-----+---------+----------------+
+2 rows in set (0.00 sec)
+
+
+=============================
+
+
+4. 		== Foreign Key ==
+
+- contrain used to provide checks for the realtionship between two tables
+	
+
+example:	
+
+- if the entry for dept is present in the dept table then (only it will allow) u can enter in the emps table
+
+--- create new tables for the example: 
+
+
+-> for checks at first create the refrenced table then create the refrencing table
+
+[ when adding in emp table, I want to check is there any particular dept no present in dept table or not.  If present then only i can give deptno to the new emp. ]
+So for this is will add an 'FOREIGN KEY (colname) refrence dept(deptno)'
+
+
+
+mysql> create table emp
+    -> (id int primary key AUTO_INCREMENT,
+    -> name char(10),
+    -> deptno int,
+    FOREIGN KEY (deptno) REFERENCES dept(deptno));
+ERROR 1824 (HY000): Failed to open the referenced table 'dept'
+
+
+	[ so, first create the Parent table  ]
+
+
+mysql> create table dept(
+    -> deptno int primary key,
+    -> dname char(15)
+    -> );
+Query OK, 0 rows affected (0.08 sec)
+
+mysql> create table emp (id int primary key AUTO_INCREMENT,name char(10), deptno int, FOREIGN KEY (deptno) REFERENCES dept(deptno));
+Query OK, 0 rows affected (0.04 sec)
+
+
+mysql> show tables;
++------------------------+
+| Tables_in_classwork_db |
++------------------------+
+| dept                   |
+| emp                    |
++------------------------+
+2 rows in set (0.00 sec)
+
+----
+	both tables are empty, now we can't new row if the deptno in this new emp row is not present in the dept table.  
+	So deptno should be present , for those deptno only we can have the emps
+
+mysql> select * from dept;
+Empty set (0.00 sec)
+
+mysql> select * from emp;
+Empty set (0.00 sec)
+
+mysql> insert into emp(name,deptno) values("Anil",10);
+
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`classwork_db`.`emp`, CONSTRAINT `emp_ibfk_1` FOREIGN KEY (`deptno`) REFERENCES `dept` (`deptno`))
+
+-----
+
+
+mysql> insert into dept values(10,"DEV");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into dept values(20,"OPS");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into dept values(30,"QA");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into dept values(40,"ACC");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from dept;
++--------+-------+
+| deptno | dname |
++--------+-------+
+|     10 | DEV   |
+|     20 | OPS   |
+|     30 | QA    |
+|     40 | ACC   |
++--------+-------+
+4 rows in set (0.00 sec)
+
+	now we can add emps , if they are from  10,20,30,40 , 
+		else it will give error (a foreign key constraint fails ()
+	
+mysql> insert into emp(name,deptno) values ('Anil',10),('Mukesh',20);
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+
+mysql> desc dept;
++--------+----------+------+-----+---------+-------+
+| Field  | Type     | Null | Key | Default | Extra |
++--------+----------+------+-----+---------+-------+
+| deptno | int      | NO   | PRI | NULL    |       |
+| dname  | char(15) | YES  |     | NULL    |       |
++--------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+
+mysql> desc emp;
++--------+----------+------+-----+---------+----------------+
+| Field  | Type     | Null | Key | Default | Extra          |
++--------+----------+------+-----+---------+----------------+
+| id     | int      | NO   | PRI | NULL    | auto_increment |
+| name   | char(10) | YES  |     | NULL    |                |
+| deptno | int      | YES  | MUL | NULL    |                |
++--------+----------+------+-----+---------+----------------+
+3 rows in set (0.01 sec)
+
+
+			************************
+	[its created index internally for the Foreign key in emp for searching ]
+	  means   [so automatically in emp, its creating a INDEX in emp table for deptno]
+	  	****************
+
+mysql> show indexes from emp;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| emp   |          0 | PRIMARY  |            1 | id          | A         |           2 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| emp   |          1 | deptno   |            1 | deptno      | A         |           2 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.06 sec)
+
+
+MUL - means deptno column in emp has a indexing now (internally applied) , squence 1 means  fastest search
+
+
+
+
+for more information: 
+
+mysql> show create table emp;
+
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` char(10) DEFAULT NULL,
+  `deptno` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `deptno` (`deptno`),
+  CONSTRAINT `emp_ibfk_1` FOREIGN KEY (`deptno`) REFERENCES `dept` (`deptno`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
+
+
+Example 2:
+
+	(now emp is foreign table for addr table)
+
+mysql> create table addr(
+    -> id int primary key auto_increment,
+    -> tal char(15),
+    -> dist char(15),
+    -> empid int UNIQUE,
+    -> FOREIGN KEY(empid) REFERENCES emp(id));
+Query OK, 0 rows affected (0.08 sec)
+
+
+mysql> insert into addr(tal,dist,empid) values("wai","Satara",2);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`classwork_db`.`addr`, CONSTRAINT `addr_ibfk_1` FOREIGN KEY (`empid`) REFERENCES `emp` (`id`))
+
+mysql> insert into addr(tal,dist) values("wai","Satara");
+Query OK, 1 row affected (0.01 sec)
+
+
+mysql> insert into addr(tal,dist) values("wai","Satara");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into addr(tal,dist) values("wai","Satara");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from addr;
++----+------+--------+-------+
+| id | tal  | dist   | empid |
++----+------+--------+-------+
+|  2 | wai  | Satara |  NULL |
+|  3 | wai  | Satara |  NULL |
+|  4 | wai  | Satara |  NULL |
++----+------+--------+-------+
+3 rows in set (0.00 sec)
+
+
+-- we can have multiple null values in foreign key.
+
+mysql> desc addr;
++-------+----------+------+-----+---------+----------------+
+| Field | Type     | Null | Key | Default | Extra          |
++-------+----------+------+-----+---------+----------------+
+| id    | int      | NO   | PRI | NULL    | auto_increment |
+| tal   | char(15) | YES  |     | NULL    |                |
+| dist  | char(15) | YES  |     | NULL    |                |
+| empid | int      | YES  | UNI | NULL    |                |
++-------+----------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+
+mysql> show indexes from addr;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| addr  |          0 | PRIMARY  |            1 | id          | A         |           2 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| addr  |          0 | empid    |            1 | empid       | A         |           1 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.05 sec)
+
+
+
+----------------------------------------------------------
+
+	parent child deletions
+
+mysql> select * from addr;
++----+------+--------+-------+
+| id | tal  | dist   | empid |
++----+------+--------+-------+
+|  2 | wai  | Satara |  NULL |
+|  3 | wai  | Satara |  NULL |
+|  4 | wai  | Satara |  NULL |
++----+------+--------+-------+
+3 rows in set (0.00 sec)
+
+
+mysql> delete from addr where id = 2;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> truncate table addr;
+Query OK, 0 rows affected (0.10 sec)
+
+mysql> drop table addr;
+Query OK, 0 rows affected (0.03 sec)
+
+
+
+now , lets try to delete from a parent
+
+
+
+mysql> select * from dept;
++--------+-------+
+| deptno | dname |
++--------+-------+
+|     10 | DEV   |
+|     20 | OPS   |
+|     30 | QA    |
+|     40 | ACC   |
++--------+-------+
+4 rows in set (0.00 sec)
+
+
+mysql> delete from dept where deptno=10;		[see this bruh]
+
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`classwork_db`.`emp`, CONSTRAINT `emp_ibfk_1` FOREIGN KEY (`deptno`) REFERENCES `dept` (`deptno`))
+
+mysql> drop table dept;
+ERROR 3730 (HY000): Cannot drop table 'dept' referenced by a foreign key constraint 'emp_ibfk_1' on table 'emp'.
+
+mysql> truncate table dept;
+ERROR 1701 (42000): Cannot truncate a table referenced in a foreign key constraint (`classwork_db`.`emp`, CONSTRAINT `emp_ibfk_1`)
+
+
+
+-> parent table k pass hoga tabhi child k pass hoga value , so agar parent udaaya toh error ayegi
+	(if that deptno is mapped to child)
+  but if no matching row in child table then we can delete it from parent.
+  
+  
+mysql> delete from dept where deptno=30;
+Query OK, 1 row affected (0.05 sec)
+
+
+
+[ can't truncate or drop the parent if any value is mapped to child]
+[ to do this , first delete child table then we can drop or truncate]
+
+
+
+
+mysql> update dept set deptno=30 where deptno=40;
+Query OK, 1 row affected (0.05 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from dept;
++--------+-------+
+| deptno | dname |
++--------+-------+
+|     10 | DEV   |
+|     20 | OPS   |
+|     30 | ACC   |
++--------+-------+
+3 rows in set (0.00 sec)
+
+
+
+---		[we also can't update that value in dept if that value is mapped to child]
+
+
+mysql> update dept set deptno=30 where deptno=20;
+
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`classwork_db`.`emp`, CONSTRAINT `emp_ibfk_1` FOREIGN KEY (`deptno`) REFERENCES `dept` (`deptno`))
+
+
+
+=================================
+
+		= Cascading effects on tables =
+
+
+mysql> drop table emp;
+Query OK, 0 rows affected (0.07 sec)
+
+mysql> drop table dept;
+Query OK, 0 rows affected (0.07 sec)
+
+
+Example 3:
+
+mysql> create table dept(deptno int primary key, dname char(15));
+Query OK, 0 rows affected (0.07 sec)
+
+
+mysql> create table emp(
+    -> id int primary key auto_increment,
+    -> name char(10),
+    -> deptno int,
+    -> foreign key(deptno) references dept(deptno) on delete cascade ON update cascade);
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> insert into dept values(10,'DEV');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into dept values(20,'OPS');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into dept values(30,'QA');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into dept values(40,'ACC');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emp(name,deptno) values('Anil',10);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emp(name,deptno) values('Mukesh',20);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emp(name,deptno) values('Ramesh',20);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into emp(name,deptno) values('Suresh',30);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emp(name,deptno) values('Ram',40);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from emp;
++----+--------+--------+
+| id | name   | deptno |
++----+--------+--------+
+|  1 | Anil   |     10 |
+|  2 | Mukesh |     20 |
+|  3 | Ramesh |     20 |
+|  4 | Suresh |     30 |
+|  5 | Ram    |     40 |
++----+--------+--------+
+5 rows in set (0.00 sec)
+
+mysql> select * from dept;
++--------+-------+
+| deptno | dname |
++--------+-------+
+|     10 | DEV   |
+|     20 | OPS   |
+|     30 | QA    |
+|     40 | ACC   |
++--------+-------+
+4 rows in set (0.00 sec)
+
+		-- cascading effect --
+		
+mysql> delete from dept where deptno = 30;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from dept;
++--------+-------+
+| deptno | dname |
++--------+-------+
+|     10 | DEV   |
+|     20 | OPS   |
+|     40 | ACC   |
++--------+-------+
+3 rows in set (0.00 sec)
+
+mysql> select * from emp;
++----+--------+--------+
+| id | name   | deptno |
++----+--------+--------+
+|  1 | Anil   |     10 |
+|  2 | Mukesh |     20 |
+|  3 | Ramesh |     20 |
+|  5 | Ram    |     40 |
++----+--------+--------+
+4 rows in set (0.00 sec)
+
+
+mysql> update emp set deptno=50 where name = "Ram";
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`classwork_db`.`emp`, CONSTRAINT `emp_ibfk_1` FOREIGN KEY (`deptno`) REFERENCES `dept` (`deptno`) ON DELETE CASCADE)
+
+mysql> update dept set deptno = 50 where deptno=40;
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`classwork_db`.`emp`, CONSTRAINT `emp_ibfk_1` FOREIGN KEY (`deptno`) REFERENCES `dept` (`deptno`) ON DELETE CASCADE)
+
+		[ we applied casscade on DELETE,  not update ]
+
+----------
+make sure we also have 'on update CASCADE'
+	
+mysql> create table emp(
+    -> id int primary key auto_increment,
+    -> name char(10),
+    -> deptno int,
+    -> foreign key(deptno) references dept(deptno) on delete cascade ON update cascade);
+
+-----------
+
+
+=========================================================================
+
+	== COmposite primary keys , with foreign keys ==
+
+Requirement : student table (rollno,std,name)
+		marks table (rollno,std, maths , history,science)
+
+rollno and std - work as primary key 
+
+
+
+
+mysql> create table marks(rollno int, std int,maths int, history int,science int, primary key(rollno,std));
+Query OK, 0 rows affected (0.07 sec)
+
+
+mysql> insert into student values(1,1,'Anil');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into student values(1,2,'Mukesh');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into student values(1,3,'Ramesh');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into student values(2,1,'Suresh');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into student values(2,2,'Sham');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from student;
++--------+-----+--------+
+| rollno | std | name   |
++--------+-----+--------+
+|      1 |   1 | Anil   |
+|      1 |   2 | Mukesh |
+|      1 |   3 | Ramesh |
+|      2 |   1 | Suresh |
+|      2 |   2 | Sham   |
++--------+-----+--------+
+5 rows in set (0.00 sec)
+
+
+
+mysql> create table marks(rollno int, std int,maths int, science int, foreign key (rollno,std) references student(rollno,std) on DELETE cascade on update cascade);
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> insert into marks values(1,1,40,50);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into marks values(1,2,50,60);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into marks values(1,3,70,80);
+Query OK, 1 row affected (0.05 sec)
+
+
+mysql> insert into marks values(2,3,80,90);	[cuz its not present in parent]
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`classwork_db`.`marks`, CONSTRAINT `marks_ibfk_1` FOREIGN KEY (`rollno`, `std`) REFERENCES `student` (`rollno`, `std`) ON DELETE CASCADE ON UPDATE CASCADE)
+
+
+
+
+mysql> desc marks;
++---------+------+------+-----+---------+-------+
+| Field   | Type | Null | Key | Default | Extra |
++---------+------+------+-----+---------+-------+
+| rollno  | int  | YES  | MUL | NULL    |       |
+| std     | int  | YES  |     | NULL    |       |
+| maths   | int  | YES  |     | NULL    |       |
+| science | int  | YES  |     | NULL    |       |
++---------+------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> show indexes from marks;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| marks |          1 | rollno   |            1 | rollno      | A         |           1 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| marks |          1 | rollno   |            2 | std         | A         |           2 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.05 sec)
+
+
+
+
+- we want it to be primary too
+
+
+
+mysql> drop table marks;
+Query OK, 0 rows affected (0.07 sec)
+
+mysql> create table marks(rollno int, std int,maths int, science int, Primary key(rollno,std),foreign key (rollno,std) references student(rollno,std) on DELETE cascade on update cascade);
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> desc marks;
++---------+------+------+-----+---------+-------+
+| Field   | Type | Null | Key | Default | Extra |
++---------+------+------+-----+---------+-------+
+| rollno  | int  | NO   | PRI | NULL    |       |
+| std     | int  | NO   | PRI | NULL    |       |
+| maths   | int  | YES  |     | NULL    |       |
+| science | int  | YES  |     | NULL    |       |
++---------+------+------+-----+---------+-------+
+4 rows in set (0.01 sec)
+
+mysql> show indexes from marks
+    -> ;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| marks |          0 | PRIMARY  |            1 | rollno      | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| marks |          0 | PRIMARY  |            2 | std         | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.01 sec)
+
+mysql> insert into marks values (1,1,50,60);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into marks values (1,1,50,60);
+ERROR 1062 (23000): Duplicate entry '1-1' for key 'marks.PRIMARY'
+
+mysql> insert into marks values (4,4,60,70);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`classwork_db`.`marks`, CONSTRAINT `marks_ibfk_1` FOREIGN KEY (`rollno`, `std`) REFERENCES `student` (`rollno`, `std`) ON DELETE CASCADE ON UPDATE CASCADE)
+
+mysql> insert into marks values (4,null,60,70);
+ERROR 1048 (23000): Column 'std' cannot be null
+
+
+mysql> select * from marks;
++--------+-----+-------+---------+
+| rollno | std | maths | science |
++--------+-----+-------+---------+
+|      1 |   1 |    50 |      60 |
+|      1 |   2 |    50 |      60 |
++--------+-----+-------+---------+
+2 rows in set (0.00 sec)
+
+mysql> delete from student where rollno=1 and std=2;
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select * from marks;
++--------+-----+-------+---------+
+| rollno | std | maths | science |
++--------+-----+-------+---------+
+|      1 |   1 |    50 |      60 |
++--------+-----+-------+---------+
+1 row in set (0.00 sec)
+
+
+
+-----------------------------------------------------
+
+	== self refrencial foreign keys == 
+	
+mysql> create table emps( id int primary key, name char(15), salary double, mgr int, foreign key (mgr) references emps(id));
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> insert into emps values(1,"Anil",10000,2);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`classwork_db`.`emps`, CONSTRAINT `emps_ibfk_1` FOREIGN KEY (`mgr`) REFERENCES `emps` (`id`))
+
+mysql> insert into emps values(1,"Mukes",50000,null);
+Query OK, 1 row affected (0.01 sec)
+
+		[ making sure atleast one manager is present ]
+mysql> select * from emps;
++----+-------+--------+------+
+| id | name  | salary | mgr  |
++----+-------+--------+------+
+|  1 | Mukes |  50000 | NULL |
++----+-------+--------+------+
+1 row in set (0.00 sec)
+
+
+mysql> insert into emps values(2,"Anil",40000,1);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emps values(3,"Ramesh",30000,2);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emps values(4,"Samesh",20000,2);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from emps;
++----+--------+--------+------+
+| id | name   | salary | mgr  |
++----+--------+--------+------+
+|  1 | Mukes  |  50000 | NULL |
+|  2 | Anil   |  40000 |    1 |
+|  3 | Ramesh |  30000 |    2 |
+|  4 | Samesh |  20000 |    2 |
++----+--------+--------+------+
+4 rows in set (0.01 sec)
+
+
+=================================================================================
+
+		== BACKUP the table ==
+	
+we have these
+
+mysql> select * from emp;
++----+--------+--------+
+| id | name   | deptno |
++----+--------+--------+
+|  1 | Anil   |     10 |
+|  2 | Mukesh |     20 |
+|  3 | Ramesh |     20 |
+|  5 | Ram    |     40 |
++----+--------+--------+
+4 rows in set (0.00 sec)
+
+mysql> select * from dept;
++--------+-------+
+| deptno | dname |
++--------+-------+
+|     10 | DEV   |
+|     20 | OPS   |
+|     40 | ACC   |
++--------+-------+
+3 rows in set (0.00 sec)
+
+---------------->
+
+
+mysql> create table dept_backup(deptno int primary key, dname char(15));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> select * from dept_backup;
+Empty set (0.00 sec)
+
+mysql> insert into dept_backup select * from dept;
+Query OK, 3 rows affected (0.01 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select * from dept_backup;
++--------+-------+
+| deptno | dname |
++--------+-------+
+|     10 | DEV   |
+|     20 | OPS   |
+|     40 | ACC   |
++--------+-------+
+3 rows in set (0.00 sec)
+
+
+
+mysql> create table emp_backup( id int primary key, name char(10), deptno int, foreign key(deptno) references dept_backup(deptno));
+Query OK, 0 rows affected (0.05 sec)
+
+
+	[we are already doing the back , then why to check again and increasq query cost]
+
+mysql> delete from dept_backup;
+Query OK, 3 rows affected (0.01 sec)
+
+mysql> insert into emp_backup select * from emp;
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`classwork_db`.`emp_backup`, CONSTRAINT `emp_backup_ibfk_1` FOREIGN KEY (`deptno`) REFERENCES `dept_backup` (`deptno`))		[checking ho rhi , fokatt time waste]
+
+
+
+
+while backing table we want
+- remove sequences
+- no foreign key checks
+
+
+so, we can remove this check 
+
+mysql> select @@foreign_key_checks;
++----------------------+
+| @@foreign_key_checks |
++----------------------+
+|                    1 |
++----------------------+
+1 row in set (0.00 sec)
+
+mysql> set @@foreign_key_checks = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select @@foreign_key_checks;
++----------------------+
+| @@foreign_key_checks |
++----------------------+
+|                    0 |
++----------------------+
+1 row in set (0.00 sec)
+
+mysql> insert into emp_backup select * from emp;
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> select * from emp_backup;
++----+--------+--------+
+| id | name   | deptno |
++----+--------+--------+
+|  1 | Anil   |     10 |
+|  2 | Mukesh |     20 |
+|  3 | Ramesh |     20 |
+|  5 | Ram    |     40 |
++----+--------+--------+
+4 rows in set (0.01 sec)
+
+
+now no checks on backup and faster query execution
+
+- mostly its turned off while backing up, but 
+- make sure you set it to 1 after the backup is done.
+
+
+mysql> insert into emp values(6,'suresh',40);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> set @@foreign_key_checks = 1;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select @@foreign_key_checks;
++----------------------+
+| @@foreign_key_checks |
++----------------------+
+|                    1 |
++----------------------+
+1 row in set (0.00 sec)
+
+===============================================================
+
+5. 		==  CHECK Constraint ==
+
+
+- this constraint used to check for the conditions
+
+
+mysql> create table employee( id int Primary Key Auto_increment, name char(15) check (length(name) >1), age int check (age>18), salary double check (salary>1000));
+Query OK, 0 rows affected (0.03 sec)
+
+
+
+mysql> insert into employee(name,age,salary) values("d",16,500);
+ERROR 3819 (HY000): Check constraint 'employee_chk_1' is violated.
+
+mysql> insert into employee(name,age,salary) values("Anil",16,500);
+ERROR 3819 (HY000): Check constraint 'employee_chk_2' is violated.
+
+mysql> insert into employee(name,age,salary) values("Anil",20,500);
+ERROR 3819 (HY000): Check constraint 'employee_chk_3' is violated.
+
+mysql> insert into employee(name,age,salary) values("Anil",26,1500);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from employee;
++----+------+------+--------+
+| id | name | age  | salary |
++----+------+------+--------+
+|  2 | Anil |   26 |   1500 |
++----+------+------+--------+
+1 row in set (0.00 sec)
+
+
+mysql> update employee set age = 16 where id =2;
+ERROR 3819 (HY000): Check constraint 'employee_chk_2' is violated.
+
+
+---- to get checks information of table ------- 
+
+
+mysql> show create table  employee;
+
+| employee | CREATE TABLE `employee` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` char(15) DEFAULT NULL,
+  `age` int DEFAULT NULL,
+  `salary` double DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `employee_chk_1` CHECK ((length(`name`) > 1)),
+  CONSTRAINT `employee_chk_2` CHECK ((`age` > 18)),
+  CONSTRAINT `employee_chk_3` CHECK ((`salary` > 1000))
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
+
+
+-------------------------------------------
+
+
+>> giving Custom names to Constraints
+
+- constraint names are unique for a database
+- but even if we give custom name to primary key constraint, it will still be PRIMARY KEY , no change to name.    [PRIMARY KEY IS RESERVED to represent primary key]
+
+
+mysql> create table emp_temp(id int Primary key,
+    -> name char(15),
+    -> salary double,
+    -> deptno int,
+    -> CONSTRAINT chk_salary CHECK (salary>1000),
+    -> CONSTRAINT fk_deptno FOREIGN KEY (deptno) REFERENCES dept(deptno));
+Query OK, 0 rows affected (0.04 sec)
+
+
+
+
+mysql> show create table emp_temp;
+
+| emp_temp | CREATE TABLE `emp_temp` (
+  `id` int NOT NULL,
+  `name` char(15) DEFAULT NULL,
+  `salary` double DEFAULT NULL,
+  `deptno` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_deptno` (`deptno`),
+  CONSTRAINT `fk_deptno` FOREIGN KEY (`deptno`) REFERENCES `dept` (`deptno`),
+  CONSTRAINT `chk_salary` CHECK ((`salary` > 1000))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
+
+
+mysql> desc emp_temp;
++--------+----------+------+-----+---------+-------+
+| Field  | Type     | Null | Key | Default | Extra |
++--------+----------+------+-----+---------+-------+
+| id     | int      | NO   | PRI | NULL    |       |
+| name   | char(15) | YES  |     | NULL    |       |
+| salary | double   | YES  |     | NULL    |       |
+| deptno | int      | YES  | MUL | NULL    |       |
++--------+----------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> show indexes from emp_temp;
++----------+------------+-----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table    | Non_unique | Key_name  | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++----------+------------+-----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| emp_temp |          0 | PRIMARY   |            1 | id          | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| emp_temp |          1 | fk_deptno |            1 | deptno      | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++----------+------------+-----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.01 sec)
+
+
+
+
+
+----
+
+mysql> create table emp_temp2( id int, salary double, email varchar(50), deptno int, 
+    -> CONSTRAINT pk_id PRIMARY KEY (id),
+    -> CONSTRAINT chk_salary2 CHECK (salary>1000),
+    -> CONSTRAINT uni_email UNIQUE(email),
+    -> CONSTRAINT fk_deptno2 FOREIGN KEY(deptno) references dept(deptno));
+
+Query OK, 0 rows affected (0.04 sec)
+
+
+
+mysql> desc emp_temp2;
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| id     | int         | NO   | PRI | NULL    |       |
+| salary | double      | YES  |     | NULL    |       |
+| email  | varchar(50) | YES  | UNI | NULL    |       |
+| deptno | int         | YES  | MUL | NULL    |       |
++--------+-------------+------+-----+---------+-------+
+4 rows in set (0.01 sec)
+
+
+mysql> show  create table emp_temp2;
+
+| emp_temp2 | CREATE TABLE `emp_temp2` (
+  `id` int NOT NULL,
+  `salary` double DEFAULT NULL,
+  `email` varchar(50) DEFAULT NULL,
+  `deptno` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uni_email` (`email`),
+  KEY `fk_deptno2` (`deptno`),
+  CONSTRAINT `fk_deptno2` FOREIGN KEY (`deptno`) REFERENCES `dept` (`deptno`),
+  CONSTRAINT `chk_salary2` CHECK ((`salary` > 1000))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
+
+
+
+mysql> show indexes from emp_temp2;
++-----------+------------+------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table     | Non_unique | Key_name   | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-----------+------------+------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| emp_temp2 |          0 | PRIMARY    |            1 | id          | A         |           0 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| emp_temp2 |          0 | uni_email  |            1 | email       | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
+| emp_temp2 |          1 | fk_deptno2 |            1 | deptno      | A         |           0 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-----------+------------+------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+3 rows in set (0.01 sec)
+
+
+
+
+
+======================================================================================
+
+
+
+			===== ALTER =====
+		
+- efficiency can decreases when we do alterations
+- storage and processing gets compromised
+
+
+
+
+---------------
+
+mysql> drop database classwork_db;
+Query OK, 10 rows affected (0.09 sec)
+
+mysql> create database classwork_db;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use classwork_db;
+Database changed
+
+
+mysql> create table emp(id int , name char(15), deptno int);
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> create table dept(deptno int , dname char(15));
+Query OK, 0 rows affected (0.03 sec)
+
+
+mysql> insert into dept values(10,'Deb'),(20,'OPS'),(30,'QA'),(40,'ACC');
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+
+mysql> insert into emp values(1,'Anil',10);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emp values(2,'Mukesh',20);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emp values(3,'Ramesh',30);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into emp values(4,'Suresh',40);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from emp;
++------+--------+--------+
+| id   | name   | deptno |
++------+--------+--------+
+|    1 | Anil   |     10 |
+|    2 | Mukesh |     20 |
+|    3 | Ramesh |     30 |
+|    4 | Suresh |     40 |
++------+--------+--------+
+4 rows in set (0.00 sec)
+
+mysql> select * from dept;
++--------+-------+
+| deptno | dname |
++--------+-------+
+|     10 | Deb   |
+|     20 | OPS   |
+|     30 | QA    |
+|     40 | ACC   |
++--------+-------+
+4 rows in set (0.00 sec)
+
+
+
+----- ADD the column 'Job' in the emp table------------
+
+(ateration k baad pata bhi nahi chalega if this column was altered )
+
+mysql> ALTER TABLE emp ADD COLUMN job CHAR(20);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> select * from emp;
++------+--------+--------+------+
+| id   | name   | deptno | job  |
++------+--------+--------+------+
+|    1 | Anil   |     10 | NULL |
+|    2 | Mukesh |     20 | NULL |
+|    3 | Ramesh |     30 | NULL |
+|    4 | Suresh |     40 | NULL |
++------+--------+--------+------+
+4 rows in set (0.00 sec)
+
+
+-- add job as dev if dept 20,40   oand opts for 10,30--
+
+mysql> update emp set job = "Dev" where deptno in (20,40);
+Query OK, 2 rows affected (0.01 sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+
+mysql> update emp set job = "OPS" where deptno in (10,30);
+Query OK, 2 rows affected (0.01 sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+
+
+mysql> select * from emp;
++------+--------+--------+------+
+| id   | name   | deptno | job  |
++------+--------+--------+------+
+|    1 | Anil   |     10 | OPS  |
+|    2 | Mukesh |     20 | Dev  |
+|    3 | Ramesh |     30 | OPS  |
+|    4 | Suresh |     40 | Dev  |
++------+--------+--------+------+
+4 rows in set (0.00 sec)
+
+
+
+------ change type of Column from char to varchar of size 10 ----
+
+
+mysql> ALTER TABLE emp MODIFY job varchar(10);
+Query OK, 4 rows affected (0.08 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+
+mysql> show create table emp;
+
+| emp   | CREATE TABLE `emp` (
+  `id` int DEFAULT NULL,
+  `name` char(15) DEFAULT NULL,
+  `deptno` int DEFAULT NULL,
+  `job` varchar(10) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
+
+
+
+-- if we try to change string value type to int
+
+mysql> ALTER TABLE emp MODIFY job int;
+ERROR 1366 (HY000): Incorrect integer value: 'OPS' for column 'job' at row 1
+
+
+
+
+-----------Change the col name of id to empno --------
+
+1. way
+mysql> ALTER TABLE emp CHANGE id  empno INT;
+Query OK, 0 rows affected (0.07 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc emp;
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| empno  | int         | YES  |     | NULL    |       |
+| name   | char(15)    | YES  |     | NULL    |       |
+| deptno | int         | YES  |     | NULL    |       |
+| job    | varchar(10) | YES  |     | NULL    |       |
++--------+-------------+------+-----+---------+-------+
+4 rows in set (0.01 sec)
+
+
+2. way
+mysql> alter table emp RENAME column empno to id;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc emp;
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| id     | int         | YES  |     | NULL    |       |
+| name   | char(15)    | YES  |     | NULL    |       |
+| deptno | int         | YES  |     | NULL    |       |
+| job    | varchar(10) | YES  |     | NULL    |       |
++--------+-------------+------+-----+---------+-------+
+4 rows in set (0.01 sec)
+
+
+
+---------------ADD a primary key to the emp table on id-----
+
+mysql> ALTER TABLE emp ADD PRIMARY KEY (id);
+Query OK, 0 rows affected (0.06 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc emp;
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| id     | int         | NO   | PRI | NULL    |       |
+| name   | char(15)    | YES  |     | NULL    |       |
+| deptno | int         | YES  |     | NULL    |       |
+| job    | varchar(10) | YES  |     | NULL    |       |
++--------+-------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+
+
+
+
+----------------ADD foreign key to the emp table on deptno--------
+
+		
+	[first parent should be primary  (at least not null)]
+	
+mysql> alter table dept ADD PRIMArY KEY(deptno);
+Query OK, 0 rows affected (0.06 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+
+mysql> alter table emp ADD FOREIGN KEY(deptno) references dept(deptno);
+Query OK, 4 rows affected (0.06 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+
+-------------------------------------------------------
+
+
+
+----- Delete column job
+
+mysql> alter table emp DROP column job;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc emp;
++--------+----------+------+-----+---------+-------+
+| Field  | Type     | Null | Key | Default | Extra |
++--------+----------+------+-----+---------+-------+
+| id     | int      | NO   | PRI | NULL    |       |
+| name   | char(15) | YES  |     | NULL    |       |
+| deptno | int      | YES  | MUL | NULL    |       |
++--------+----------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+
+
+----- Remove foreign key constrains from the emo table----------
+
+
+mysql> alter table emp drop CONSTRAINT emp_ibfk_1;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> show create table emp;
+
+| emp   | CREATE TABLE `emp` (
+  `id` int NOT NULL,
+  `name` char(15) DEFAULT NULL,
+  `deptno` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `deptno` (`deptno`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci |
+
+
+but still it has the index of foreign key , check here
+
+mysql> show indexes from emp;
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| emp   |          0 | PRIMARY  |            1 | id          | A         |           4 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
+| emp   |          1 | deptno   |            1 | deptno      | A         |           4 |     NULL |   NULL | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (0.01 sec)
+
+		[no foreign key constraint]
+mysql> insert into emp values(5,"Ram",50);
+Query OK, 1 row affected (0.01 sec)
+
+
+
+mysql> alter table emp drop INDEX deptno;
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+OR
+
+mysql> Drop index deptno on emp;
+
+
+--------------------------------------------
+
+
+
+------- remove primary key from emp---------
+
+
+		[there is only one primary key so just write it as it is]
+			[also it doesnt take any custom name]
+			
+mysql> alter table emp drop PRIMARY KEY;
+Query OK, 5 rows affected (0.07 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+
+mysql> desc emp;
++--------+----------+------+-----+---------+-------+
+| Field  | Type     | Null | Key | Default | Extra |
++--------+----------+------+-----+---------+-------+
+| id     | int      | NO   |     | NULL    |       |
+| name   | char(15) | YES  |     | NULL    |       |
+| deptno | int      | YES  |     | NULL    |       |
++--------+----------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+[ can't add null in ID even after deleting Primary key constraint from it]
+
+
+
+-------------------------------------		
+		
+		
+		
+	=== DONT DO THE ALTERATION when Database is in PRODUCTION ===
+		- do backups and stagings
+
+		
+		
+======================================================================================
+
+
+
+
+
+
+
+
+
+
