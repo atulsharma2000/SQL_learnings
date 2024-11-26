@@ -1,0 +1,785 @@
+		=== PQL/SQL ===
+		
+- its a procedural language (basically programming in sql)
+
+
+Persistent stored models
+
+PL-SQL 
+can be either a 
+	1. Stored procedure
+	2. Trigger
+	3. SQL Function
+	
+	
+	
+------------------------------
+1. Stored Procedure 
+
+- save a program in the database, and run it when ever needed
+
+
+few things we must know first:-
+
+a. Delimeter 
+	;  <- query won't be completed if not ended with this
+		
+		
+	custom delimeter	[changing the delimerter from ; to $]  
+		mysql> DELIMITER 
+
+
+- different delimiter is required in procedural part cuz we write mutiple statements and  we change delimiters to avoid conflict.
+
+exmp:  	
+	PROCEDURE
+	
+>>	DELIMITER $$
+	{
+	statement 1;
+	statement 2;
+	statement 3;
+	}
+	$$
+>>	DELIMITER ;
+
+
+				syntax: 
+				
+					DELIMETER $$
+
+
+					$$
+					DELIMETER ;	
+
+ 
+
+-- to add the procedure in mysql
+	> SOURCE <path to .sql file>;
+-- to call the stored procedure after sourcing
+	> CALL sp_hello();
+
+------------------------------
+
+1. lets create a hello word program using .sql file in vs code and then source it in sql then call it .
+
+
+DELIMITER $$
+CREATE PROCEDURE sp_hello()
+BEGIN       -- these are the curly brackets in sql
+
+    SELECT "HELLO WORLD" as msg;
+
+END;
+$$
+DELIMITER ;
+
+
+	-- now do the sourcing --
+	
+mysql> source /home/atul/Desktop/Code_vs_code/PSM01.sql
+Query OK, 0 rows affected (0.01 sec)
+		 
+
+
+mysql> call sp_hello();
++-------------+
+| msg         |
++-------------+
+| HELLO WORLD |
++-------------+
+1 row in set (0.00 sec)
+
+
+
+
+
+
+mysql> SHOW PROCEDURE STATUS WHERE Db = 'classwork_db' AND Type = 'PROCEDURE';
++--------------+----------+-----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+
+| Db           | Name     | Type      | Definer        | Modified            | Created             | Security_type | Comment | character_set_client | collation_connection | Database Collation |
++--------------+----------+-----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+
+| classwork_db | sp_hello | PROCEDURE | root@localhost | 2024-11-26 08:27:23 | 2024-11-26 08:27:23 | DEFINER       |         | utf8mb4              | utf8mb4_0900_ai_ci   | utf8mb4_0900_ai_ci |
++--------------+----------+-----------+----------------+---------------------+---------------------+---------------+---------+----------------------+----------------------+--------------------+
+1 row in set (0.00 sec)
+
+
+
+
+----------------------------------------------
+
+1.1 now changes in above procedure , then we have to first delete the existing procedure and Source it again
+
+-> better we write the drop command in sql procedure only
+
+-------
+DROP PROCEDURE IF EXISTS sp_hello;
+
+DELIMITER $$
+CREATE PROCEDURE sp_hello()
+BEGIN       -- these are the curly brackets in sql
+
+    SELECT "HELLO WORLD i am awesome" as msg;
+
+END;
+$$
+DELIMITER ;
+-------
+
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM01.sql;
+Query OK, 0 rows affected (0.01 sec)
+Query OK, 0 rows affected (0.01 sec)
+
+
+mysql> call sp_hello();
++--------------------------+
+| msg                      |
++--------------------------+
+| HELLO WORLD i am awesome |
++--------------------------+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+
+-----------------------------------------------------------------------------------------
+
+
+
+2. Write a procedure to insert hello world in the result table
+
+
+mysql> create table result(
+    -> id int,
+    -> val varchar(100));
+Query OK, 0 rows affected (0.03 sec)
+
+
+--------------
+DROP PROCEDURE if exists sp_hello2;
+
+DELIMITER $$
+BEGIN
+
+insert into result values(1,'Hello world');
+
+END;
+$$
+DELIMITER ;
+-------------
+
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM02.sql
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call sp_hello2();
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from result;
++------+-------------+
+| id   | val         |
++------+-------------+
+|    1 | Hello world |
++------+-------------+
+1 row in set (0.00 sec)
+
+-----------------------------------------------------------------------------------------
+
+
+3. Calculate area of circle for the given radius.  (take radius 7)
+
+------------
+
+DROP PROCEDURE if exists sp_circlearea;
+
+DELIMITER $$
+CREATE PROCEDURE sp_circlearea()
+BEGIN
+
+    DECLARE radius INT DEFAULT 7;
+    select radius,radius*radius*3.14 as Area;
+
+END;
+$$
+DELIMITER ;
+
+-------------
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM03.sql
+Query OK, 0 rows affected (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> call sp_circlearea();
++--------+--------+
+| radius | Area   |
++--------+--------+
+|      7 | 153.86 |
++--------+--------+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+
+-----------------------------------------------------------------------------------------
+
+
+4. Calculate area of circle and add the result in the result table
+		(we want  >  AREA of Circle = .... )
+	
+---------
+DROP PROCEDURE if exists sp_circlearea2;
+
+DELIMITER $$
+CREATE PROCEDURE sp_circlearea2()
+BEGIN
+
+    DECLARE radius INT DEFAULT 7;     
+    DECLARE Area DOUBLE;
+    DECLARE msg VARCHAR(50);
+
+    SET Area = radius*radius*3.14;
+    -- SET msg = concat("Area of Circle = ",area);         --[one way]
+    Select concat("Area of Circle = ",area) into msg;	   -- [other way]
+
+    Insert into result values(radius,msg);
+
+END;
+$$
+DELIMITER ;
+----------
+
+
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM04.sql
+Query OK, 0 rows affected (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> call sp_circlearea2();
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from result;
++------+-------------------------+
+| id   | val                     |
++------+-------------------------+
+|    1 | Hello world             |
+|    1 | 153.86                  |
+|    1 | 153.86                  |
+|    7 | Area of Circle = 153.86 |
++------+-------------------------+
+4 rows in set (0.00 sec)
+
+
+
+-----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+
+IN parameters - initialized by calling program
+OUT parameters - Initialized by called procedure
+
+INOUT parameter - initialized by calling program and 
+
+
+
+-------------------------------------
+
+				
+		[	IN	]
+
+
+5. Calculate area of rectangle where user will pass length and breadth through paramenters
+and also input the area in result table.
+
+-------
+DROP PROCEDURE if exists sp_rectanglearea;
+DELIMITER $$
+CREATE PROCEDURE sp_rectanglearea(p_length INT,  IN p_breadth INT)  
+                -- IN means user will input the value
+BEGIN
+    DECLARE area double;
+    DECLARE msg varchar(20);
+    SET area = p_length*p_breadth;
+    SELECT p_length,p_breadth,area;
+    SELECT concat(p_length,",",p_breadth) into msg;
+
+    insert into result values(area,msg);
+END;
+$$
+DELIMITER ;
+
+-- source
+-- call sp_rectanglearea(5,3);   // user input 
+---------
+
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM05.sql
+Query OK, 0 rows affected (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> call sp_rectanglearea(5,3);
++----------+-----------+------+
+| p_length | p_breadth | area |
++----------+-----------+------+
+|        5 |         3 |   15 |
++----------+-----------+------+
+1 row in set (0.00 sec)
+
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from result;
++------+-------------------------+
+| id   | val                     |
++------+-------------------------+
+|    1 | Hello world             |
+|    1 | 153.86                  |
+|    1 | 153.86                  |
+|    7 | Area of Circle = 153.86 |
+|    8 | 15                      |
+|   15 | 5,3                     |
++------+-------------------------+
+6 rows in set (0.00 sec)
+
+---------------------------------------------------
+
+		[	OUT	]
+
+
+
+6. Calculate square of given number. Return the result through OUT parameter.
+
+
+
+----------------
+
+DROP PROCEDURE if exists sp_square;
+DELIMITER $$
+CREATE PROCEDURE sp_square(IN p_no INT,OUT p_res INT)
+BEGIN
+    SET p_res = p_no * p_no;
+END;
+$$
+DELIMITER ;
+
+
+-- in second parameter we have to pass sql parameter
+-- call sp_square()
+
+-----------------
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM06.sql
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> call sp_square(5,@res);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select @res;
++------+
+| @res |
++------+
+|   25 |
++------+
+1 row in set (0.00 sec)
+
+
+
+
+
+----------------------
+
+		[	INOUT	]
+
+7.
+
+pass number through INOUT paramerter 
+return result through same inout paramenrter
+
+
+---------------
+drop PROCEDURE if exists sp_square2;
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_square2(INOUT p_val INT)
+BEGIN
+    SET p_val = p_val * p_val;
+END;
+$$
+DELIMITER ;
+---------------
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM07.sql
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select @res;
++------------+
+| @res       |
++------------+
+| NULL       |
++------------+
+1 row in set (0.00 sec)
+
+mysql> set @res = 8;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call sp_square2(@res);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select @res;
++------+
+| @res |
++------+
+|   64 |
++------+
+1 row in set (0.00 sec)
+
+--------------------------------------------------------
+
+
+
+8. Write a procedure to check if the given number is even or odd
+
+----------
+DROP PROCEDURE if exists sp_evenodd;
+
+DELIMITER $$
+CREATE PROCEDURE sp_evenodd(IN p_num INT)
+BEGIN
+    IF p_num % 2 = 0 THEN
+        SELECT "its a EVEN Number" as msg;
+        insert into result values(p_num,"is even");
+    ELSE
+        SELECT "its a ODD Number" as msg;
+        insert into result values(p_num,"is odd");
+    END IF;
+END;
+$$
+DELIMITER ;
+---------
+
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM08.sql
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call sp_evenodd(5);
++------------------+
+| msg              |
++------------------+
+| its a ODD Number |
++------------------+
+1 row in set (0.01 sec)
+
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from result;
++------+-------------------------+
+| id   | val                     |
++------+-------------------------+
+|    1 | Hello world             |
+|    1 | 153.86                  |
+|    1 | 153.86                  |
+|    7 | Area of Circle = 153.86 |
+|    8 | 15                      |
+|   15 | 5,3                     |
+|    5 | is odd                  |
++------+-------------------------+
+7 rows in set (0.00 sec)
+
+----------------------------------------------------------------------------------
+
+
+9. write a procedure to sum all the even numbers in the given range
+
+
+--------------------
+
+DROP PROCEDURE if exists sp_evensum;
+
+DELIMITER $$
+CREATE PROCEDURE sp_evensum(IN p_low int, IN p_high int)
+BEGIN
+    DECLARE sum int;	-- or [DECLARE sum int DEFAULT 0;]
+    set sum=0;
+
+    while p_high >= p_low DO
+    if(p_low % 2 = 0) then
+        set sum = sum + p_low;
+    end if;
+    set p_low = p_low + 1;
+    
+    END WHILE;
+
+    SELECT sum;
+    insert into result values(1000,sum);
+END;
+$$
+DELIMITER ;
+--------------------
+
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM09.sql
+Query OK, 0 rows affected (0.01 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call sp_evensum(1,10);
++------+
+| sum  |
++------+
+|   30 |
++------+
+1 row in set (0.00 sec)
+
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from result;
++------+-------------------------+
+| id   | val                     |
++------+-------------------------+
+|    1 | Hello world             |
+|    1 | 153.86                  |
+|    1 | 153.86                  |
+|    7 | Area of Circle = 153.86 |
+|    8 | 15                      |
+|   15 | 5,3                     |
+|    5 | is odd                  |
+| 1000 | 30                      |
++------+-------------------------+
+8 rows in set (0.00 sec)
+
+------------------------------------------------------------------------
+	
+	[while loop 	and	REPEAT loop]
+
+
+10. write procedure to insert table of given number in result table
+
+
+--------------------------
+	
+DROP PROCEDURE if exists sp_table;
+
+DELIMITER $$
+CREATE PROCEDURE sp_table(IN num int)
+BEGIN
+    DECLARE i int DEFAULT 1;
+
+    truncate table num_table;
+
+    -- while i<=10 do
+    -- insert into num_table values((i*num),concat(num," * ",i));
+    -- set i = i+1;    
+    -- end while;
+    
+    repeat
+    insert into num_table values((i*num),concat(num," * ",i));
+    set i = i+1;
+    UNTIL i > 10        -- true hote hi fail hoga
+    end repeat;
+
+    select * from num_table;
+END;
+$$
+DELIMITER ;
+
+-------------------------
+
+mysql> source /home/atul/Desktop/Code_vs_code/PSM10.sql
+Query OK, 0 rows affected (0.01 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call sp_table(2);
++------+--------+
+| num  | steps  |
++------+--------+
+|    2 | 2 * 1  |
+|    4 | 2 * 2  |
+|    6 | 2 * 3  |
+|    8 | 2 * 4  |
+|   10 | 2 * 5  |
+|   12 | 2 * 6  |
+|   14 | 2 * 7  |
+|   16 | 2 * 8  |
+|   18 | 2 * 9  |
+|   20 | 2 * 10 |
++------+--------+
+10 rows in set (0.06 sec)
+
+Query OK, 0 rows affected (0.06 sec)
+
+
+----------------------------------------------------------------------------
+
+		[use LOOP	(label loop)]
+		
+11. Write a procedure to check if the given number is prime or not.	
+
+------------------------------------------------
+
+DROP PROCEDURE if exists sp_isPrime;
+DELIMITER $$
+CREATE PROCEDURE sp_isPrime(IN val int)
+
+BEGIN
+    DECLARE i INT DEFAULT 2;
+    DECLARE status char(15);
+
+    label_prime: LOOP
+        
+        if val=1 then
+            set status = "NOT PRIME";
+            LEAVE label_prime;
+        end if;
+
+        IF val = i then
+            set status = "PRIME";
+            LEAVE label_prime;	
+        end if;
+
+        if (val % i = 0) then
+            set status = "NOT PRIME";
+            LEAVE label_prime;
+        end if;
+
+        set i = i+1;
+
+    END LOOP;
+   
+    select status;
+
+END;
+$$
+DELIMITER ;
+
+-----------------------------
+mysql> call sp_isPrime(15);
++-----------+
+| status    |
++-----------+
+| NOT PRIME |
++-----------+
+1 row in set (0.00 sec)
+
+
+===================================================================
+
+		[	use CASE	]
+
+12. write a procedure where it will give the category of employee 
+- for the given empno. categories are :-
+	- sal < 1500 -> Poor
+	- sal 1500 to 2500  -> Middle
+	- sal > 2500 -> rich
+
+
+----------------
+DROP PROCEDURE if exists sp_empCategory;
+
+DELIMITER $$
+CREATE PROCEDURE sp_empCategory(IN p_empno int)
+
+BEGIN
+    DECLARE salary DECIMAL(8,2);
+    DECLARE category varchar(20);
+
+    Select sal into salary from emp where empno = p_empno;
+
+    -- if (salary<1500) then
+    -- select "POOR" as Status;
+    -- end if;
+    -- if (salary >= 1500 and salary <=2500) then
+    -- select "Middle" as Satus;
+    -- end if;
+    -- if (salary > 2500) then
+    -- select "Rich" as Status;
+    -- end if;
+
+    CASE
+        when (salary<1500) then set category = "POOR";
+        when (salary >= 1500 and salary <=2500) then set category = "MIDDLE";
+        ELSE set category = "RICK";
+    END CASE;
+
+    Select concat ("The Employee belongs to category - ",category) as msg;
+
+END;
+
+$$
+DELIMITER ;
+
+---------------
+mysql> source /home/atul/Desktop/Code_vs_code/PSM12.sql
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> call sp_empCategory(7499);
++-------------------------------------------+
+| msg                                       |
++-------------------------------------------+
+| The Employee belongs to category - MIDDLE |
++-------------------------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+
+============================================================================
+============================================================================
+============================================================================
+
+
+
+			** TRIGGERs **
+		-----------------------------
+	
+- triggers in sql are generally kind of stored procedures which are triggered on some events , specially on DML operations
+
+
+EXAMPLE
+- for every insert in transactoin table , we must update the accounts table and we have to do it again and again as there are mutiple transaction in seconds.
+So, to automate this process we will create a TRIGGER for every single insert in transaction table.
+
+
+Trigger can be created for (6 type of evenets)
+					trigger	when
+					
+			1. INSERT	[BEFORE OR AFTER insert]	2
+			2. UPDATE 	[BEFORE OR AFTER update]	2
+			3. DELETE	[BEFORE OR AFTER delete]	2
+								
+
+
+--------------------------
+INSERT INTO transactions values(1,1001,2000,'Credit');
+
+we can fetch above values using objects (NEW,OLD) for operations: 
+
+	for inserting	1. NEW		[NEW.amount, NEW.txType]
+	
+	for update	2. NEW,OLD
+	
+	for deleting	3. OLD		
+
+
+
+
+
+
+-------------------------------------------------------------------------
+
+
+
+
