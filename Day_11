@@ -1,0 +1,541 @@
+
+
+			** TRIGGERs **
+		-----------------------------
+	
+- triggers in sql are generally kind of stored procedures which are triggered on some events , specially on 'DML operations'
+
+
+EXAMPLE
+- for every insert in transactoin table , we must update the accounts table and we have to do it again and again as there are mutiple transaction in seconds.
+So, to automate this process we will create a TRIGGER for every single insert in transaction table.
+
+
+Trigger can be created for (6 type of evenets)
+					trigger	when
+					
+			1. INSERT	[BEFORE INSERT OR AFTER INSERT]	2
+			2. UPDATE 	[BEFORE UPDATE OR AFTER UPDATE]	2
+			3. DELETE	[BEFORE UPDATE OR AFTER DELETE]	2
+								
+
+
+--------------------------
+INSERT INTO transactions values(1,1001,2000,'Credit');
+
+to get what happend in transaction
+we can fetch above values using objects (NEW,OLD) for operations: 
+
+	for inserting	1. NEW		[NEW.amount, NEW.txType]
+	
+	for update	2. NEW,OLD
+	
+	for deleting	3. OLD		
+
+
+
+
+
+- Triggers are mostly used to maintain the logs
+
+- log specific to database is also maintained , if its deleted or update 
+
+example: update person SET Address = 'pune' where NO = ...;
+	log will maintain using [ NEW.Address  = pune , OLD.Address = Sangli ]
+
+
+example: Adhaar history maintains the logs that how many times you have updated the aadhar 
+
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+
+Example:
+
+CREATE table accounts(
+    accno INT PRIMARY KEY,
+    balance DOUBLE,
+    acc_type varchar(10)
+);
+
+
+INSERT INTO accounts values(1001,7000,"Savings");
+INSERT INTO accounts values(1002,14000,"Current");
+INSERT INTO accounts values(1003,21000,"Savings");
+INSERT INTO accounts values(1004,28000,"Current");
+
+
+
+CREATE TABLE transactions(
+    txid INT PRIMARY KEY AUTO_INCREMENT,
+    accno INT,
+    amount DOUBLE,
+    tx_type char(10)
+);  
+
+
+
+Now to write a trigger 
+
+- we tell trigger what to do , on which event 
+
+CREATE TRIGGER update_balance
+AFTER INSERT on transactions
+FOR EACH ROW
+
+
+-----------
+	
+DROP TRIGGER if exists update_balance;
+DELIMITER $$
+
+CREATE TRIGGER update_balance
+AFTER INSERT on transactions
+FOR EACH ROW
+
+BEGIN
+    IF NEW.tx_type = 'Deposit' then
+        UPDATE accounts SET balance = balance + NEW.amount where accno = NEW.accno;
+    ELSE
+        update accounts SET balance = balance - NEW.amount where accno = NEW.accno;
+    END IF;
+END;
+$$
+DELIMITER ;	
+
+-----------
+
+
+mysql> source /home/atul/Desktop/Code_vs_code/day_11_plsql/PMS01.sql;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+
+mysql> select * from accounts;
++-------+---------+----------+
+| accno | balance | acc_type |
++-------+---------+----------+
+|  1001 |    7000 | Savings  |
+|  1002 |   14000 | Current  |
+|  1003 |   21000 | Savings  |
+|  1004 |   28000 | Current  |
++-------+---------+----------+
+4 rows in set (0.00 sec)
+
+
+
+mysql> insert into transactions(accno,amount,tx_type) values(1001,1000,"Deposit");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from transactions;
++------+-------+--------+---------+
+| txid | accno | amount | tx_type |
++------+-------+--------+---------+
+|    1 |  1001 |   1000 | Deposit |
++------+-------+--------+---------+
+1 row in set (0.00 sec)
+
+mysql> select * from accounts;
++-------+---------+----------+
+| accno | balance | acc_type |
++-------+---------+----------+
+|  1001 |    8000 | Savings  |
+|  1002 |   14000 | Current  |
+|  1003 |   21000 | Savings  |
+|  1004 |   28000 | Current  |
++-------+---------+----------+
+4 rows in set (0.00 sec)
+
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+
+
+EXAMPLE 2.
+
+mysql> Drop table transactions;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> CREATE TABLE transactions(
+    ->     txid INT PRIMARY KEY AUTO_INCREMENT,
+    ->     accno INT,
+    ->     amount DOUBLE,
+    ->     tx_type char(10),
+    ->     Status char(10)
+    -> );  
+Query OK, 0 rows affected (0.03 sec)
+
+
+----------
+
+DROP TRIGGER if exists update_balance;
+
+DELIMITER $$
+CREATE TRIGGER update_balance
+BEFORE INSERT on transactions
+FOR EACH ROW
+
+BEGIN
+    DECLARE curr_bal DOUBLE;
+
+    IF new.tx_type = 'Deposit' then
+        update accounts SET balance = balance + NEW.amount where accno = NEW.accno;
+        SET NEW.status = "Success";
+    ELSE
+        Select balance into curr_bal from accounts where accno = NEW.accno;
+        IF curr_bal > NEW.amount  then
+            update accounts SET balance = balance - NEW.amount where accno = NEW.accno;
+            SET NEW.status = "Success";
+        ELSE
+            SET NEW.status  = 'Fails';
+        END IF;
+    END if;
+
+END;
+$$
+DELIMITER ;
+
+-------
+
+mysql> source /home/atul/Desktop/Code_vs_code/day_11_plsql/PMS02.sql;
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql>  insert into transactions(accno,amount,tx_type) values(1001,1000,"Deposit");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from accounts;
++-------+---------+----------+
+| accno | balance | acc_type |
++-------+---------+----------+
+|  1001 |    9000 | Savings  |
+|  1002 |   14000 | Current  |
+|  1003 |   21000 | Savings  |
+|  1004 |   28000 | Current  |
++-------+---------+----------+
+4 rows in set (0.00 sec)
+
+
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+
+		** NORMALIZATOIN **
+		
+		
+- we consider entire application and check all transactions and normarlize each of them
+	
+	transaction example: banking, rail reservation, shopping mall
+
+
+		STEPS (before even starting normalization) :-
+1. for given transaction create list of all the fields from that transaction
+
+2. now strive for atomicity 
+	(har value pe operation possible hona chaihye)
+	(means all cells of fields should be able to store single value)
+	(if combination of multiple values found in a field , create different filed for it so that where operations can be performed for all the values of that field)
+	
+3. get general description of all the field properties
+
+4. for all practical purpose we can have single table with all the columns . give emaningul names to table		
+
+5 assign datatypes and widths to all columns on the basis of general 
+
+6. remove the computed columns
+
+7. assign primary key to the table
+
+8. at this stage
+
+9.
+
+10.
+
+
+-------- NOrmalization -----
+
+1-NF
+
+a. remove repeating group into a new table
+b. key elements of all 
+
+
+
+
+
+
+
+2- NF
+
+a. onlt thable with composite PK to be examined
+b. those columns that are not directly dependent on the entire composite PK, they are to be removed into a new tbale
+c. the key elements on which the non key elements were rugubakky dependent
+
+
+
+
+
+3 - NF
+
+a. only nono key elemens are examined for inter deoendencies
+b. inter dependent cols that are note direclt related to PK they are to be removed into a new tbale
+
+c.1. 
+
+c.2. 
+
+
+
+
+
+
+
+
+=============================================================================
+
+	== DENORMALIZATION ==
+
+- normalization will yield a strujcture that is non redundant
+- but having too many inter related tables will lead to comples and inefficient querries
+- to sendure bteer performace of analutical quereism few rules of normalizationo con be compromised
+- break the rules of normalizatioin is known as denormalization
+	
+	
+Denormalization is the process of adding precomputed redundant data to an otherwise normalized relational database to improve read performance.	
+
+1.  add the computed columns
+
+
+
+
+==================================================================================
+
+			FUNCTIONS
+			
+		types:
+			1. deterministic - output is same for input
+			2. non-deterministoc	- time/date sensitive functions (or different outputs everytimt)
+			
+		
+> name as Title
+
+mysql> select concat(Upper(left(ename,1)),lower(substring(ename,2))) as name from emp;
++--------+
+| name   |
++--------+
+| Smith  |
+| Allen  |
+| Ward   |
+| Jones  |
+| Martin |
+| Blake  |
+| Clark  |
+| Scott  |
+| King   |
+| Turner |
+| Adams  |
+| James  |
+| Ford   |
+| Miller |
+| John   |
++--------+
+15 rows in set (0.01 sec)
+
+
+> lets create function for it
+
+--------------------------------
+
+import mysql.connector
+
+mydb = mysql.connector.connect(
+    host="localhost",
+    username="root",
+    password="manager",
+    database="classwork_db"
+)
+
+
+mycursor = mydb.cursor()
+
+mycursor.execute("select empno,ename,sal from emp")
+result = mycursor.fetchall()
+
+for ele in result:
+    print(ele)
+
+
+mycursor.close()
+
+----
+atul@atul-ROG-Strix-G531GT-G531GT:~/Desktop/Code_vs_code/day_11_plsql$ python3 SELECT.py
+(7369, 'SMITH', Decimal('800.00'))
+(7499, 'ALLEN', Decimal('1600.00'))
+(7521, 'WARD', Decimal('1250.00'))
+(7566, 'JONES', Decimal('2975.00'))
+(7654, 'MARTIN', Decimal('1250.00'))
+(7698, 'BLAKE', Decimal('2850.00'))
+(7782, 'CLARK', Decimal('2450.00'))
+(7788, 'SCOTT', Decimal('3000.00'))
+(7839, 'KING', Decimal('5000.00'))
+(7844, 'TURNER', Decimal('1500.00'))
+(7876, 'ADAMS', Decimal('1100.00'))
+(7900, 'JAMES', Decimal('950.00'))
+(7902, 'FORD', Decimal('3000.00'))
+(7934, 'MILLER', Decimal('1300.00'))
+(8000, 'John', Decimal('3500.00'))
+--------------------------------
+-----------------------------------------------------
+
+	INSERT.py
+	
+--------------------------
+import mysql.connector
+
+mydb = mysql.connector.connect(
+    host = 'localhost',
+    username = 'root',
+    password = 'manager',
+    database = 'classwork_db'
+)
+
+mycursor = mydb.cursor()
+
+sql = "INSERT into emp(empno,ename,sal) values(%s,%s,%s)"
+val = (8001,"ANIL",4000)
+mycursor.execute(sql,val)
+
+mydb.commit()
+mycursor.close()
+-----------------------------
+
+
+
+
+atul@atul-ROG-Strix-G531GT-G531GT:~/Desktop/Code_vs_code/day_11_plsql$ python3 INSERT.py
+
+atul@atul-ROG-Strix-G531GT-G531GT:~/Desktop/Code_vs_code/day_11_plsql$ python3 SELECT.py
+(7369, 'SMITH', Decimal('800.00'))
+(7499, 'ALLEN', Decimal('1600.00'))
+(7521, 'WARD', Decimal('1250.00'))
+(7566, 'JONES', Decimal('2975.00'))
+(7654, 'MARTIN', Decimal('1250.00'))
+(7698, 'BLAKE', Decimal('2850.00'))
+(7782, 'CLARK', Decimal('2450.00'))
+(7788, 'SCOTT', Decimal('3000.00'))
+(7839, 'KING', Decimal('5000.00'))
+(7844, 'TURNER', Decimal('1500.00'))
+(7876, 'ADAMS', Decimal('1100.00'))
+(7900, 'JAMES', Decimal('950.00'))
+(7902, 'FORD', Decimal('3000.00'))
+(7934, 'MILLER', Decimal('1300.00'))
+(8000, 'John', Decimal('3500.00'))
+(8001, 'ANIL', Decimal('4000.00'))
+
+=====================================================================
+
+
+
+	UPDATE.py
+	
+	
+import mysql.connector
+
+mydb = mysql.connector.connect(
+    host= 'localhost',
+    username = 'root',
+    password = 'manager',
+    database = 'classwork_db'
+)
+
+mycursor = mydb.cursor()
+
+
+sql = "update emp set sal = %s where empno = %s "
+val= (6000,8000)
+# jhon bhai 
+mycursor.execute(sql,val)
+
+mycursor.close()
+mydb.commit()
+
+---------------
+
+atul@atul-ROG-Strix-G531GT-G531GT:~/Desktop/Code_vs_code/day_11_plsql$ python3 UPDATE.py
+atul@atul-ROG-Strix-G531GT-G531GT:~/Desktop/Code_vs_code/day_11_plsql$ python3 SELECT.py
+(7369, 'SMITH', Decimal('800.00'))
+(7499, 'ALLEN', Decimal('1600.00'))
+(7521, 'WARD', Decimal('1250.00'))
+(7566, 'JONES', Decimal('2975.00'))
+(7654, 'MARTIN', Decimal('1250.00'))
+(7698, 'BLAKE', Decimal('2850.00'))
+(7782, 'CLARK', Decimal('2450.00'))
+(7788, 'SCOTT', Decimal('3000.00'))
+(7839, 'KING', Decimal('5000.00'))
+(7844, 'TURNER', Decimal('1500.00'))
+(7876, 'ADAMS', Decimal('1100.00'))
+(7900, 'JAMES', Decimal('950.00'))
+(7902, 'FORD', Decimal('3000.00'))
+(7934, 'MILLER', Decimal('1300.00'))
+(8000, 'John', Decimal('6000.00'))
+(8001, 'ANIL', Decimal('4000.00'))
+
+=====================================================================
+
+
+	DELETE.py
+
+
+	
+import mysql.connector
+
+mydb = mysql.connector.connect(
+    host = 'localhost',
+    username = 'root',
+    password = 'manager',
+    database = 'classwork_db'
+)
+
+
+mycursor = mydb.cursor()
+
+
+sql = "delete from emp where empno = %s"
+val = (8000,)
+
+mycursor.execute(sql,val)
+print(f"DELETED JHON")
+
+mycursor.close()
+
+mydb.commit()
+
+-----------------------
+
+--------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
