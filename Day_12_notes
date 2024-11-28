@@ -1,0 +1,1297 @@
+
+notebook me - 28.08.24
+----------------- Understanding groups / rollup-----------
+
+
+-> rollup does the supper aggregation
+
+
+
+
+1. Display depno and counto of emps in that dept
+
+mysql> select deptno,count(empno) from emp group by deptno;
++--------+--------------+
+| deptno | count(empno) |
++--------+--------------+
+|     20 |            5 |
+|     30 |            6 |
+|     10 |            3 |
++--------+--------------+
+3 rows in set (0.01 sec)
+
+
+
+2. display total emps in organisation
+
+mysql> select "Total",count(empno) from emp;
++-------+--------------+
+| Total | count(empno) |
++-------+--------------+
+| Total |           14 |
++-------+--------------+
+1 row in set (0.00 sec)
+
+
+3.  display deptno and count of employees in that dept aloing with final total of all emps
+
+
+mysql> select deptno,count(empno) from emp group by deptno UNION select "total",count(empno) from emp;
++--------+--------------+
+| deptno | count(empno) |
++--------+--------------+
+| 20     |            5 |
+| 30     |            6 |
+| 10     |            3 |
+| total  |           14 |
++--------+--------------+
+4 rows in set (0.00 sec)
+
+
+or
+
+
+mysql> select deptno, count(empno) from emp
+    -> group by deptno with ROLLUP;
++--------+--------------+
+| deptno | count(empno) |
++--------+--------------+
+|     10 |            3 |
+|     20 |            5 |
+|     30 |            6 |
+|   NULL |           14 |
++--------+--------------+
+4 rows in set (0.00 sec)
+
+better
+
+mysql> select IFNULL(deptno,"Total"), count(empno) from emp group by deptno 
+    -> with ROLLUP;
++------------------------+--------------+
+| IFNULL(deptno,"Total") | count(empno) |
++------------------------+--------------+
+| 10                     |            3 |
+| 20                     |            5 |
+| 30                     |            6 |
+| Total                  |           14 |
++------------------------+--------------+
+4 rows in set (0.00 sec)
+
+
+4. Dispaly deptwise total salary spent on emp along with the total salary
+
+
+mysql> select ifnull(deptno,"TOTAL"),sum(sal) from emp group by deptno with rollup;
++------------------------+----------+
+| ifnull(deptno,"TOTAL") | sum(sal) |
++------------------------+----------+
+| 10                     |  8750.00 |
+| 20                     | 10875.00 |
+| 30                     |  9400.00 |
+| TOTAL                  | 29025.00 |
++------------------------+----------+
+4 rows in set (0.01 sec)
+
+
+or
+
+
+mysql> select deptno,sum(sal) from emp group by deptno
+    -> union
+    -> select "total",sum(sal) from emp;
++--------+----------+
+| deptno | sum(sal) |
++--------+----------+
+| 20     | 10875.00 |
+| 30     |  9400.00 |
+| 10     |  8750.00 |
+| total  | 29025.00 |
++--------+----------+
+4 rows in set (0.00 sec)
+
+
+5. Dispaly departmentwise , jobwise total salary spent.
+
+
+mysql> select deptno,job,sum(sal) from emp group by deptno,job order by deptno;
++--------+-----------+----------+
+| deptno | job       | sum(sal) |
++--------+-----------+----------+
+|     10 | CLERK     |  1300.00 |
+|     10 | MANAGER   |  2450.00 |
+|     10 | PRESIDENT |  5000.00 |
+|     20 | ANALYST   |  6000.00 |
+|     20 | CLERK     |  1900.00 |
+|     20 | MANAGER   |  2975.00 |
+|     30 | CLERK     |   950.00 |
+|     30 | MANAGER   |  2850.00 |
+|     30 | SALESMAN  |  5600.00 |
++--------+-----------+----------+
+9 rows in set (0.01 sec)
+
+******  total based on depts  ****
+-> super aggregation deptwise
+-> and also total super aggregation
+
+4. Dispaly departmentwise , jobwise total salary spent along with their subtotals
+
+
+mysql> select deptno,job,sum(sal) from emp group by deptno,job  with rollup;
++--------+-----------+----------+
+| deptno | job       | sum(sal) |
++--------+-----------+----------+
+|     10 | CLERK     |  1300.00 |
+|     10 | MANAGER   |  2450.00 |
+|     10 | PRESIDENT |  5000.00 |
+|     10 | NULL      |  8750.00 |
+|     20 | ANALYST   |  6000.00 |
+|     20 | CLERK     |  1900.00 |
+|     20 | MANAGER   |  2975.00 |
+|     20 | NULL      | 10875.00 |
+|     30 | CLERK     |   950.00 |
+|     30 | MANAGER   |  2850.00 |
+|     30 | SALESMAN  |  5600.00 |
+|     30 | NULL      |  9400.00 |
+|   NULL | NULL      | 29025.00 |
++--------+-----------+----
+
+or
+
+
+mysql> select  ifnull(deptno,"Dept total") as deptno, ifnull(job,"All job total") as job ,sum(sal
+)  from emp group by deptno,job  with rollup;
++------------+---------------+----------+
+| deptno     | job           | sum(sal) |
++------------+---------------+----------+
+| 10         | CLERK         |  1300.00 |
+| 10         | MANAGER       |  2450.00 |
+| 10         | PRESIDENT     |  5000.00 |
+| 10         | All job total |  8750.00 |
+| 20         | ANALYST       |  6000.00 |
+| 20         | CLERK         |  1900.00 |
+| 20         | MANAGER       |  2975.00 |
+| 20         | All job total | 10875.00 |
+| 30         | CLERK         |   950.00 |
+| 30         | MANAGER       |  2850.00 |
+| 30         | SALESMAN      |  5600.00 |
+| 30         | All job total |  9400.00 |
+| Dept total | All job total | 29025.00 |
++------------+---------------+----------+
+13 rows in set, 2 warnings (0.00 sec)
+
+
+
+
+5. Display jobwise , deptwise total sal spent along with the sub totals
+
+
+mysql>  select ifnull(job,"job total") as job , ifnull(deptno,"dept total") dept ,sum(sal) from e
+mp group by job,deptno with ROLLUP;
++-----------+------------+----------+
+| job       | dept       | sum(sal) |
++-----------+------------+----------+
+| ANALYST   | 20         |  6000.00 |
+| ANALYST   | dept total |  6000.00 |
+| CLERK     | 10         |  1300.00 |
+| CLERK     | 20         |  1900.00 |
+| CLERK     | 30         |   950.00 |
+| CLERK     | dept total |  4150.00 |
+| MANAGER   | 10         |  2450.00 |
+| MANAGER   | 20         |  2975.00 |
+| MANAGER   | 30         |  2850.00 |
+| MANAGER   | dept total |  8275.00 |
+| PRESIDENT | 10         |  5000.00 |
+| PRESIDENT | dept total |  5000.00 |
+| SALESMAN  | 30         |  5600.00 |
+| SALESMAN  | dept total |  5600.00 |
+| job total | dept total | 29025.00 |
++-----------+------------+----------+
+15 rows in set, 1 warning (0.01 sec)
+
+
+--------------------------------------------------------------
+
+        -- GROUPING FUCNTION -- 
+
+
+mysql> insert into emp(empno,ename,sal) values(8000,'Jhon',2000);
+Query OK, 1 row affected (0.05 sec)
+
+6. dispaly deptwise total salary spent on emp along with total salay spent on all depts
+
+
+[ wrong output , as jhon is having 'null' in deptno ]
+mysql> select  ifnull(deptno,"Dept total") as deptno, ifnull(job,"All job total") as job ,sum(sal
+    -> )  from emp group by deptno,job  with rollup;
++------------+---------------+-----------+
+| deptno     | job           | sum(sal
+) |
++------------+---------------+-----------+
+| Dept total | All job total |   2000.00 |
+| Dept total | All job total |   2000.00 |
+| 10         | CLERK         |   1300.00 |
+| 10         | MANAGER       |   2450.00 |
+| 10         | PRESIDENT     |   5000.00 |
+| 10         | All job total |   8750.00 |
+| 20         | ANALYST       |   6000.00 |
+| 20         | CLERK         |   1900.00 |
+| 20         | MANAGER       |   2975.00 |
+| 20         | All job total |  10875.00 |
+| 30         | CLERK         |    950.00 |
+| 30         | MANAGER       |   2850.00 |
+| 30         | SALESMAN      |   5600.00 |
+| 30         | All job total |   9400.00 |
+| Dept total | All job total |  31025.00 |
++------------+---------------+-----------+
+15 rows in set, 2 warnings (0.00 sec)
+
+
+SO, CORRECT way is
+
+GROUPING- jahan deptno ka group hua h, udhar return 1
+    so grouping return 1 where it finds group 
+
+mysql> select deptno,sum(sal), GROUPING(deptno) from emp
+    -> group by deptno with ROLLUP;
++--------+----------+------------------+
+| deptno | sum(sal) | GROUPING(deptno) |
++--------+----------+------------------+
+|   NULL |  2000.00 |                0 |
+|     10 |  8750.00 |                0 |
+|     20 | 10875.00 |                0 |
+|     30 |  9400.00 |                0 |
+|   NULL | 31025.00 |                1 |
++--------+----------+------------------+
+5 rows in set (0.00 sec)
+
+
+[   now we can differentiate null ]
+
+mysql> select if(grouping(deptno)=1,"total",deptno) dept, if(grouping(job)=1,"total",job) job , sum(sal) from emp group by deptno,job with rollup;
++-------+-----------+----------+
+| dept  | job       | sum(sal) |
++-------+-----------+----------+
+| NULL  | NULL      |  2000.00 |
+| NULL  | total     |  2000.00 |
+| 10    | CLERK     |  1300.00 |
+| 10    | MANAGER   |  2450.00 |
+| 10    | PRESIDENT |  5000.00 |
+| 10    | total     |  8750.00 |
+| 20    | ANALYST   |  6000.00 |
+| 20    | CLERK     |  1900.00 |
+| 20    | MANAGER   |  2975.00 |
+| 20    | total     | 10875.00 |
+| 30    | CLERK     |   950.00 |
+| 30    | MANAGER   |  2850.00 |
+| 30    | SALESMAN  |  5600.00 |
+| 30    | total     |  9400.00 |
+| total | total     | 31025.00 |
++-------+-----------+----------+
+15 rows in set, 1 warning (0.00 sec)
+
+
+
+
+7. display jobwie total salary spent one emp along with the total salary spend on all jobs
+
+mysql> select if(grouping(job)=1,"Total",job) job, sum(sal) from emp group by job with rollup;
++-----------+----------+
+| job       | sum(sal) |
++-----------+----------+
+| NULL      |  2000.00 |
+| ANALYST   |  6000.00 |
+| CLERK     |  4150.00 |
+| MANAGER   |  8275.00 |
+| PRESIDENT |  5000.00 |
+| SALESMAN  |  5600.00 |
+| Total     | 31025.00 |
++-----------+----------+
+7 rows in set, 1 warning (0.00 sec)
+
+
+
+8. display deptwise, jobwise, total and subtotal of sal spent
+
+mysql> select deptno,job,sum(sal) from emp group by deptno, job with rollup;
++--------+-----------+----------+
+| deptno | job       | sum(sal) |
++--------+-----------+----------+
+|   NULL | NULL      |  2000.00 |
+|   NULL | NULL      |  2000.00 |
+|     10 | CLERK     |  1300.00 |
+|     10 | MANAGER   |  2450.00 |
+|     10 | PRESIDENT |  5000.00 |
+|     10 | NULL      |  8750.00 |
+|     20 | ANALYST   |  6000.00 |
+|     20 | CLERK     |  1900.00 |
+|     20 | MANAGER   |  2975.00 |
+|     20 | NULL      | 10875.00 |
+|     30 | CLERK     |   950.00 |
+|     30 | MANAGER   |  2850.00 |
+|     30 | SALESMAN  |  5600.00 |
+|     30 | NULL      |  9400.00 |
+|   NULL | NULL      | 31025.00 |
++--------+-----------+----------+
+15 rows in set (0.01 sec)
+
+now we must differentiate the nulls
+
+
+mysql> select if(grouping(deptno)=1,"dept total",deptno) dept , if(grouping(job)=1,"job total",job) job, sum(sal) from emp group by deptno,job with rollup;
++------------+-----------+----------+
+| dept       | job       | sum(sal) |
++------------+-----------+----------+
+| NULL       | NULL      |  2000.00 |
+| NULL       | job total |  2000.00 |
+| 10         | CLERK     |  1300.00 |
+| 10         | MANAGER   |  2450.00 |
+| 10         | PRESIDENT |  5000.00 |
+| 10         | job total |  8750.00 |
+| 20         | ANALYST   |  6000.00 |
+| 20         | CLERK     |  1900.00 |
+| 20         | MANAGER   |  2975.00 |
+| 20         | job total | 10875.00 |
+| 30         | CLERK     |   950.00 |
+| 30         | MANAGER   |  2850.00 |
+| 30         | SALESMAN  |  5600.00 |
+| 30         | job total |  9400.00 |
+| dept total | job total | 31025.00 |
++------------+-----------+----------+
+15 rows in set, 1 warning (0.00 sec)
+
+
+    [   here in grouping it uses left shiting formula,
+        grouping+gropuping+grouping << 3 ]
+
+mysql> select if(grouping(deptno)=1,"dept total",deptno) dept , if(grouping(job)=1,"job total",job) job, sum(sal), grouping(deptno,job) from emp group by deptno,job
+ with rollup;
++------------+-----------+----------+----------------------+
+| dept       | job       | sum(sal) | grouping(deptno,job) |
++------------+-----------+----------+----------------------+
+| NULL       | NULL      |  2000.00 |                    0 |
+| NULL       | job total |  2000.00 |                    1 |
+| 10         | CLERK     |  1300.00 |                    0 |
+| 10         | MANAGER   |  2450.00 |                    0 |
+| 10         | PRESIDENT |  5000.00 |                    0 |
+| 10         | job total |  8750.00 |                    1 |
+| 20         | ANALYST   |  6000.00 |                    0 |
+| 20         | CLERK     |  1900.00 |                    0 |
+| 20         | MANAGER   |  2975.00 |                    0 |
+| 20         | job total | 10875.00 |                    1 |
+| 30         | CLERK     |   950.00 |                    0 |
+| 30         | MANAGER   |  2850.00 |                    0 |
+| 30         | SALESMAN  |  5600.00 |                    0 |
+| 30         | job total |  9400.00 |                    1 |
+| dept total | job total | 31025.00 |                    3 |
++------------+-----------+----------+----------------------+
+15 rows in set, 1 warning (0.00 sec)
+
+
+
+
+
+9. sub totals and total from the emp
+
+
+mysql> select if(grouping(deptno)=1,"dept total",deptno) dept , if(grouping(job)=1,"job total",job) job, sum(sal), grouping(deptno,job) from emp group by deptno,job with rollup  having grouping(job)= 1;
++------------+-----------+----------+----------------------+
+| dept       | job       | sum(sal) | grouping(deptno,job) |
++------------+-----------+----------+----------------------+
+| NULL       | job total |  2000.00 |                    1 |
+| 10         | job total |  8750.00 |                    1 |
+| 20         | job total | 10875.00 |                    1 |
+| 30         | job total |  9400.00 |                    1 |
+| dept total | job total | 31025.00 |                    3 |
++------------+-----------+----------+----------------------+
+5 rows in set, 2 warnings (0.00 sec)
+
+
+
+---------------------------------------------------------------
+
+
+        ** WINDOW Functions **
+
+two types:
+
+    1. Aggregate functions    (witout over clause they act as group functions)
+    ex:  sum , max , min , avg , count
+
+    2. non - Aggregate functions   (compulsory need OVER clause)
+    ex: ROW_NUMBER()
+        RANK()
+        DENSE_RANK()
+        LEAD()
+        LAG()
+
+- window functions doesnt reduces the number of rows
+- input rows = output rows in window function
+    
+    - we use 'OVER' clause
+
+
+
+
+-------
+
+1. display salaries and total salary spend into the organization 
+
+mysql> select ename,sal,(select sum(sal) from emp) as total from emp;
++--------+---------+----------+
+| ename  | sal     | total    |
++--------+---------+----------+
+| SMITH  |  800.00 | 31025.00 |
+| ALLEN  | 1600.00 | 31025.00 |
+| WARD   | 1250.00 | 31025.00 |
+| JONES  | 2975.00 | 31025.00 |
+| MARTIN | 1250.00 | 31025.00 |
+| BLAKE  | 2850.00 | 31025.00 |
+| CLARK  | 2450.00 | 31025.00 |
+| SCOTT  | 3000.00 | 31025.00 |
+| KING   | 5000.00 | 31025.00 |
+| TURNER | 1500.00 | 31025.00 |
+| ADAMS  | 1100.00 | 31025.00 |
+| JAMES  |  950.00 | 31025.00 |
+| FORD   | 3000.00 | 31025.00 |
+| MILLER | 1300.00 | 31025.00 |
+| Jhon   | 2000.00 | 31025.00 |
++--------+---------+----------+
+15 rows in set (0.01 sec)
+
+
+sum() produces single row  but others produces 14 rows , so we put it into the sub query , inner query executes 14 times 
+    
+    Now window function give same result with simplified qeuery
+
+        OVER()
+
+mysql> select ename, sal, sum(sal) OVER() as total  from emp;
++--------+---------+----------+
+| ename  | sal     | total    |
++--------+---------+----------+
+| SMITH  |  800.00 | 31025.00 |
+| ALLEN  | 1600.00 | 31025.00 |
+| WARD   | 1250.00 | 31025.00 |
+| JONES  | 2975.00 | 31025.00 |
+| MARTIN | 1250.00 | 31025.00 |
+| BLAKE  | 2850.00 | 31025.00 |
+| CLARK  | 2450.00 | 31025.00 |
+| SCOTT  | 3000.00 | 31025.00 |
+| KING   | 5000.00 | 31025.00 |
+| TURNER | 1500.00 | 31025.00 |
+| ADAMS  | 1100.00 | 31025.00 |
+| JAMES  |  950.00 | 31025.00 |
+| FORD   | 3000.00 | 31025.00 |
+| MILLER | 1300.00 | 31025.00 |
+| Jhon   | 2000.00 | 31025.00 |
++--------+---------+----------+
+15 rows in set (0.00 sec)
+
+
+mysql> delete from emp where empno = '8000';
+Query OK, 1 row affected (0.01 sec)
+
+
+
+
+---------------
+
+2. display detpno and count of emps in that dept out of 
+
+
+
+mysql> select deptno,count(empno) from emp group by deptno;
++--------+--------------+
+| deptno | count(empno) |
++--------+--------------+
+|     20 |            5 |
+|     30 |            6 |
+|     10 |            3 |
++--------+--------------+
+3 rows in set (0.00 sec)
+
+mysql> select deptno,count(empno), (select count(empno) from emp)  from emp group by deptno;
++--------+--------------+--------------------------------+
+| deptno | count(empno) | (select count(empno) from emp) |
++--------+--------------+--------------------------------+
+|     20 |            5 |                             14 |
+|     30 |            6 |                             14 |
+|     10 |            3 |                             14 |
++--------+--------------+--------------------------------+
+3 rows in set (0.00 sec)
+
+
+WE CAN PASS PARTITION or    in OVER() 
+    -it considers entire partition as single table
+    -
+
+
+windows fucntions are not used with group by instead we use OVER 
+so ,
+
+
+
+
+mysql> select deptno , count(empno) over(PARTITION by deptno) from emp;
++--------+----------------------------------------+
+| deptno | count(empno) over(PARTITION by deptno) |
++--------+----------------------------------------+
+|     10 |                                      3 |
+|     10 |                                      3 |
+|     10 |                                      3 |
+|     20 |                                      5 |
+|     20 |                                      5 |
+|     20 |                                      5 |
+|     20 |                                      5 |
+|     20 |                                      5 |
+|     30 |                                      6 |
+|     30 |                                      6 |
+|     30 |                                      6 |
+|     30 |                                      6 |
+|     30 |                                      6 |
+|     30 |                                      6 |
++--------+----------------------------------------+
+14 rows in set (0.00 sec)
+
+
+mysql> select distinct deptno ,count(empno) over(PARTITION by deptno) from emp;
++--------+----------------------------------------+
+| deptno | count(empno) over(PARTITION by deptno) |
++--------+----------------------------------------+
+|     10 |                                      3 |
+|     20 |                                      5 |
+|     30 |                                      6 |
++--------+----------------------------------------+
+3 rows in set (0.01 sec)
+
+    [it doesnt work with group by]
+mysql> select deptno ,count(empno) over(PARTITION by deptno) from emp group by deptno;
+ERROR 1055 (42000): Expression #2 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'classwork_db.emp.empno' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+
+
+
+mysql> select distinct deptno ,count(empno) over(PARTITION by deptno) as emp_count , count(empno) over() as total_emp from emp ;
++--------+-----------+-----------+
+| deptno | emp_count | total_emp |
++--------+-----------+-----------+
+|     10 |         3 |        14 |
+|     20 |         5 |        14 |
+|     30 |         6 |        14 |
++--------+-----------+-----------+
+3 rows in set (0.00 sec)
+
+
+
+---------------
+
+
+
+2. display emp with max salary from its dept
+
+
+mysql> select deptno,ename,sal from emp where sal in (select max(sal) from emp group by deptno) order by deptno;
++--------+-------+---------+
+| deptno | ename | sal     |
++--------+-------+---------+
+|     10 | KING  | 5000.00 |
+|     20 | SCOTT | 3000.00 |
+|     20 | FORD  | 3000.00 |
+|     30 | BLAKE | 2850.00 |
++--------+-------+---------+
+4 rows in set (0.01 sec)
+
+----- but what if one more department has 3000 ------
+
+mysql> insert into emp(deptno,ename,sal) values(10,"gg",3000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select deptno,ename,sal from emp where sal in (select max(sal) from emp group by deptno) order by deptno;
++--------+-------+---------+
+| deptno | ename | sal     |
++--------+-------+---------+
+|     10 | KING  | 5000.00 |
+|     10 | gg    | 3000.00 |
+|     20 | SCOTT | 3000.00 |
+|     20 | FORD  | 3000.00 |
+|     30 | BLAKE | 2850.00 |
++--------+-------+---------+
+5 rows in set (0.01 sec)
+
+
+TO solve this we need CORRELATED SUBQUERIES
+
+mysql> select deptno,ename,sal from emp e1 where sal in (select max(sal) from em
+p e2 where e1.deptno = e2.deptno group by deptno) order by deptno;
++--------+-------+---------+
+| deptno | ename | sal     |
++--------+-------+---------+
+|     10 | KING  | 5000.00 |
+|     20 | SCOTT | 3000.00 |
+|     20 | FORD  | 3000.00 |
+|     30 | BLAKE | 2850.00 |
++--------+-------+---------+
+4 rows in set (0.00 sec)
+
+more better >>>  [using = (as its fetching only single row based on outer queries deptno)  and  no group by needed] 
+
+
+mysql> select deptno,ename,sal from emp e1 where sal = (select max(sal) from emp e2 where e1.deptno = e2.deptno ) order by deptno;
++--------+-------+---------+
+| deptno | ename | sal     |
++--------+-------+---------+
+|     10 | KING  | 5000.00 |
+|     20 | SCOTT | 3000.00 |
+|     20 | FORD  | 3000.00 |
+|     30 | BLAKE | 2850.00 |
++--------+-------+---------+
+4 rows in set (0.00 sec)
+
+
+Now lets try window function :-
+
+
+> Display emp with his deptno,name ,sal and max salary of his dept
+
+
+    [ we can't use it in where , and having can't be used without group by]
+mysql> select deptno,ename,sal,max(sal) over(partition by deptno) as dept_sal from emp where sal = max(sal) over(partition by deptno) ;
+ERROR 3593 (HY000): You cannot use the window function 'max' in this context.'
+
+- we can use sub Query
+
+mysql> select deptno,ename,sal from emp where sal in (select max(sal) over(partition by deptno) from emp) order by deptno ;
++--------+-------+---------+
+| deptno | ename | sal     |
++--------+-------+---------+
+|     10 | KING  | 5000.00 |
+|     20 | SCOTT | 3000.00 |
+|     20 | FORD  | 3000.00 |
+|     30 | BLAKE | 2850.00 |
++--------+-------+---------+
+4 rows in set (0.00 sec)
+
+"query_cost": "15.65"
+
+
+We will simplify it later
+
+
+
+
+---------------------------------------------------------
+
+
+
+
+        ***   Non-Aggregate Functions  ***
+
+
+- compulsory works with the over clause
+
+
+
+-------------
+ROW_NUMBER()
+
+
+mysql> select ROW_NUMBER() OVER(), empno , ename,sal,job from emp;
++---------------------+-------+--------+---------+-----------+
+| ROW_NUMBER() OVER() | empno | ename  | sal     | job       |
++---------------------+-------+--------+---------+-----------+
+|                   1 |  7369 | SMITH  |  800.00 | CLERK     |
+|                   2 |  7499 | ALLEN  | 1600.00 | SALESMAN  |
+|                   3 |  7521 | WARD   | 1250.00 | SALESMAN  |
+|                   4 |  7566 | JONES  | 2975.00 | MANAGER   |
+|                   5 |  7654 | MARTIN | 1250.00 | SALESMAN  |
+|                   6 |  7698 | BLAKE  | 2850.00 | MANAGER   |
+|                   7 |  7782 | CLARK  | 2450.00 | MANAGER   |
+|                   8 |  7788 | SCOTT  | 3000.00 | ANALYST   |
+|                   9 |  7839 | KING   | 5000.00 | PRESIDENT |
+|                  10 |  7844 | TURNER | 1500.00 | SALESMAN  |
+|                  11 |  7876 | ADAMS  | 1100.00 | CLERK     |
+|                  12 |  7900 | JAMES  |  950.00 | CLERK     |
+|                  13 |  7902 | FORD   | 3000.00 | ANALYST   |
+|                  14 |  7934 | MILLER | 1300.00 | CLERK     |
++---------------------+-------+--------+---------+-----------+
+14 rows in set (0.00 sec)
+
+
+>  Department wise row number
+    (department ka partition banaya and gave them the row numbers)
+    (no need to use order by)
+    (can give random wise row number CLARK can be firt or king etc. basis on the fetch)
+
+mysql> select ROW_NUMBER() OVER(partition by deptno) as rno,deptno, empno , enam
+e,sal,job from emp;
++-----+--------+-------+--------+---------+-----------+
+| rno | deptno | empno | ename  | sal     | job       |
++-----+--------+-------+--------+---------+-----------+
+|   1 |     10 |  7782 | CLARK  | 2450.00 | MANAGER   |
+|   2 |     10 |  7839 | KING   | 5000.00 | PRESIDENT |
+|   3 |     10 |  7934 | MILLER | 1300.00 | CLERK     |
+|   1 |     20 |  7369 | SMITH  |  800.00 | CLERK     |
+|   2 |     20 |  7566 | JONES  | 2975.00 | MANAGER   |
+|   3 |     20 |  7788 | SCOTT  | 3000.00 | ANALYST   |
+|   4 |     20 |  7876 | ADAMS  | 1100.00 | CLERK     |
+|   5 |     20 |  7902 | FORD   | 3000.00 | ANALYST   |
+|   1 |     30 |  7499 | ALLEN  | 1600.00 | SALESMAN  |
+|   2 |     30 |  7521 | WARD   | 1250.00 | SALESMAN  |
+|   3 |     30 |  7654 | MARTIN | 1250.00 | SALESMAN  |
+|   4 |     30 |  7698 | BLAKE  | 2850.00 | MANAGER   |
+|   5 |     30 |  7844 | TURNER | 1500.00 | SALESMAN  |
+|   6 |     30 |  7900 | JAMES  |  950.00 | CLERK     |
++-----+--------+-------+--------+---------+-----------+
+14 rows in set (0.00 sec)
+
+
+now (can give random wise row number CLARK can be firt or king etc. basis on the fetch)   ->> now make it sorted on the bases of name too
+
+            [sorted in asc based on sal, row numbers are located for the departments]
+        
+        [ordering then producting result for each]
+mysql> select ROW_NUMBER() OVER(partition by deptno order by sal) as rno,deptno,
+ empno , ename,sal,job from emp;
++-----+--------+-------+--------+---------+-----------+
+| rno | deptno | empno | ename  | sal     | job       |
++-----+--------+-------+--------+---------+-----------+
+|   1 |     10 |  7934 | MILLER | 1300.00 | CLERK     |
+|   2 |     10 |  7782 | CLARK  | 2450.00 | MANAGER   |
+|   3 |     10 |  7839 | KING   | 5000.00 | PRESIDENT |
+|   1 |     20 |  7369 | SMITH  |  800.00 | CLERK     |
+|   2 |     20 |  7876 | ADAMS  | 1100.00 | CLERK     |
+|   3 |     20 |  7566 | JONES  | 2975.00 | MANAGER   |
+|   4 |     20 |  7788 | SCOTT  | 3000.00 | ANALYST   |
+|   5 |     20 |  7902 | FORD   | 3000.00 | ANALYST   |
+|   1 |     30 |  7900 | JAMES  |  950.00 | CLERK     |
+|   2 |     30 |  7521 | WARD   | 1250.00 | SALESMAN  |
+|   3 |     30 |  7654 | MARTIN | 1250.00 | SALESMAN  |
+|   4 |     30 |  7844 | TURNER | 1500.00 | SALESMAN  |
+|   5 |     30 |  7499 | ALLEN  | 1600.00 | SALESMAN  |
+|   6 |     30 |  7698 | BLAKE  | 2850.00 | MANAGER   |
++-----+--------+-------+--------+---------+-----------+
+14 rows in set (0.00 sec)
+
+            [cce type question]
+
+    [using order by later] - sorting after the result is produced
+
+mysql> select ROW_NUMBER() OVER(partition by deptno) as rno,deptno, empno , ename,sal,job from emp order by sal;
++-----+--------+-------+--------+---------+-----------+
+| rno | deptno | empno | ename  | sal     | job       |
++-----+--------+-------+--------+---------+-----------+
+|   1 |     20 |  7369 | SMITH  |  800.00 | CLERK     |
+|   6 |     30 |  7900 | JAMES  |  950.00 | CLERK     |
+|   4 |     20 |  7876 | ADAMS  | 1100.00 | CLERK     |
+|   2 |     30 |  7521 | WARD   | 1250.00 | SALESMAN  |
+|   3 |     30 |  7654 | MARTIN | 1250.00 | SALESMAN  |
+|   3 |     10 |  7934 | MILLER | 1300.00 | CLERK     |
+|   5 |     30 |  7844 | TURNER | 1500.00 | SALESMAN  |
+|   1 |     30 |  7499 | ALLEN  | 1600.00 | SALESMAN  |
+|   1 |     10 |  7782 | CLARK  | 2450.00 | MANAGER   |
+|   4 |     30 |  7698 | BLAKE  | 2850.00 | MANAGER   |
+|   2 |     20 |  7566 | JONES  | 2975.00 | MANAGER   |
+|   3 |     20 |  7788 | SCOTT  | 3000.00 | ANALYST   |
+|   5 |     20 |  7902 | FORD   | 3000.00 | ANALYST   |
+|   2 |     10 |  7839 | KING   | 5000.00 | PRESIDENT |
++-----+--------+-------+--------+---------+-----------+
+14 rows in set (0.00 sec)
+
+
+
+ ----------------------------------
+
+ RANK() - windown function
+
+
+
+
+
+- rank will produce the ranks  exaclty equal to the number of rows
+
+- konse employee ko kis basis pe RANK krna h , no idea
+
+mysql> select RANK() OVER() , empno , ename,sal,deptno,job from emp;
++---------------+-------+--------+---------+--------+-----------+
+| RANK() OVER() | empno | ename  | sal     | deptno | job       |
++---------------+-------+--------+---------+--------+-----------+
+|             1 |  7369 | SMITH  |  800.00 |     20 | CLERK     |
+|             1 |  7499 | ALLEN  | 1600.00 |     30 | SALESMAN  |
+|             1 |  7521 | WARD   | 1250.00 |     30 | SALESMAN  |
+|             1 |  7566 | JONES  | 2975.00 |     20 | MANAGER   |
+|             1 |  7654 | MARTIN | 1250.00 |     30 | SALESMAN  |
+|             1 |  7698 | BLAKE  | 2850.00 |     30 | MANAGER   |
+|             1 |  7782 | CLARK  | 2450.00 |     10 | MANAGER   |
+|             1 |  7788 | SCOTT  | 3000.00 |     20 | ANALYST   |
+|             1 |  7839 | KING   | 5000.00 |     10 | PRESIDENT |
+|             1 |  7844 | TURNER | 1500.00 |     30 | SALESMAN  |
+|             1 |  7876 | ADAMS  | 1100.00 |     20 | CLERK     |
+|             1 |  7900 | JAMES  |  950.00 |     30 | CLERK     |
+|             1 |  7902 | FORD   | 3000.00 |     20 | ANALYST   |
+|             1 |  7934 | MILLER | 1300.00 |     10 | CLERK     |
++---------------+-------+--------+---------+--------+-----------+
+14 rows in set (0.01 sec)
+
+
+
+
+
+
+so give condition to give ranks
+ rank will produce the ranks  exaclty equal to the number of rows
+    ---[same salary then given same name]----
+        also skips the next rank value
+
+mysql> select RANK() OVER(order by sal desc) as `rank` , empno , ename,sal,deptno,job from emp;
++------+-------+--------+---------+--------+-----------+
+| rank | empno | ename  | sal     | deptno | job       |
++------+-------+--------+---------+--------+-----------+
+|    1 |  7839 | KING   | 5000.00 |     10 | PRESIDENT |
+|    2 |  7788 | SCOTT  | 3000.00 |     20 | ANALYST   |
+|    2 |  7902 | FORD   | 3000.00 |     20 | ANALYST   |
+|    4 |  7566 | JONES  | 2975.00 |     20 | MANAGER   |
+|    5 |  7698 | BLAKE  | 2850.00 |     30 | MANAGER   |
+|    6 |  7782 | CLARK  | 2450.00 |     10 | MANAGER   |
+|    7 |  7499 | ALLEN  | 1600.00 |     30 | SALESMAN  |
+|    8 |  7844 | TURNER | 1500.00 |     30 | SALESMAN  |
+|    9 |  7934 | MILLER | 1300.00 |     10 | CLERK     |
+|   10 |  7521 | WARD   | 1250.00 |     30 | SALESMAN  |
+|   10 |  7654 | MARTIN | 1250.00 |     30 | SALESMAN  |
+|   12 |  7876 | ADAMS  | 1100.00 |     20 | CLERK     |
+|   13 |  7900 | JAMES  |  950.00 |     30 | CLERK     |
+|   14 |  7369 | SMITH  |  800.00 |     20 | CLERK     |
++------+-------+--------+---------+--------+-----------+
+14 rows in set (0.00 sec)
+
+    [jitne rows (14) utne ranks (14)]
+
+
+
+
+   ** [2 having same sal , then they have same ranl and next rank value will be skipped] **
+
+mysql> select RANK() OVER(PARTITION by deptno ORDER BY sal desc) as `rank` , empno , ename,sal,deptno,job from emp;
++------+-------+--------+---------+--------+-----------+
+| rank | empno | ename  | sal     | deptno | job       |
++------+-------+--------+---------+--------+-----------+
+|    1 |  7839 | KING   | 5000.00 |     10 | PRESIDENT |
+|    2 |  7782 | CLARK  | 2450.00 |     10 | MANAGER   |
+|    3 |  7934 | MILLER | 1300.00 |     10 | CLERK     |
+|    1 |  7788 | SCOTT  | 3000.00 |     20 | ANALYST   |
+|    1 |  7902 | FORD   | 3000.00 |     20 | ANALYST   |
+|    3 |  7566 | JONES  | 2975.00 |     20 | MANAGER   |
+|    4 |  7876 | ADAMS  | 1100.00 |     20 | CLERK     |
+|    5 |  7369 | SMITH  |  800.00 |     20 | CLERK     |
+|    1 |  7698 | BLAKE  | 2850.00 |     30 | MANAGER   |
+|    2 |  7499 | ALLEN  | 1600.00 |     30 | SALESMAN  |
+|    3 |  7844 | TURNER | 1500.00 |     30 | SALESMAN  |
+|    4 |  7521 | WARD   | 1250.00 |     30 | SALESMAN  |
+|    4 |  7654 | MARTIN | 1250.00 |     30 | SALESMAN  |
+|    6 |  7900 | JAMES  |  950.00 |     30 | CLERK     |
++------+-------+--------+---------+--------+-----------+
+14 rows in set (0.00 sec)
+
+
+
+--------------
+
+DENSE_RANK() 
+
+- RANK WILL NOT BE SKIPPED 
+
+
+
+
+    [it doesnt know on what basis he should give rank]
+
+mysql> select DENSE_RANK() OVER() , empno , ename,sal,deptno,job from emp;
++---------------------+-------+--------+---------+--------+-----------+
+| DENSE_RANK() OVER() | empno | ename  | sal     | deptno | job       |
++---------------------+-------+--------+---------+--------+-----------+
+|                   1 |  7369 | SMITH  |  800.00 |     20 | CLERK     |
+|                   1 |  7499 | ALLEN  | 1600.00 |     30 | SALESMAN  |
+|                   1 |  7521 | WARD   | 1250.00 |     30 | SALESMAN  |
+|                   1 |  7566 | JONES  | 2975.00 |     20 | MANAGER   |
+|                   1 |  7654 | MARTIN | 1250.00 |     30 | SALESMAN  |
+|                   1 |  7698 | BLAKE  | 2850.00 |     30 | MANAGER   |
+|                   1 |  7782 | CLARK  | 2450.00 |     10 | MANAGER   |
+|                   1 |  7788 | SCOTT  | 3000.00 |     20 | ANALYST   |
+|                   1 |  7839 | KING   | 5000.00 |     10 | PRESIDENT |
+|                   1 |  7844 | TURNER | 1500.00 |     30 | SALESMAN  |
+|                   1 |  7876 | ADAMS  | 1100.00 |     20 | CLERK     |
+|                   1 |  7900 | JAMES  |  950.00 |     30 | CLERK     |
+|                   1 |  7902 | FORD   | 3000.00 |     20 | ANALYST   |
+|                   1 |  7934 | MILLER | 1300.00 |     10 | CLERK     |
++---------------------+-------+--------+---------+--------+-----------+
+14 rows in set (0.01 sec)
+
+
+
+
+    [   no skip in the ranks    ]
+
+mysql> select DENSE_RANK() OVER(ORDER by sal desc) as `dense_rank` , empno , ena
+me,sal,deptno,job from emp;
++------------+-------+--------+---------+--------+-----------+
+| dense_rank | empno | ename  | sal     | deptno | job       |
++------------+-------+--------+---------+--------+-----------+
+|          1 |  7839 | KING   | 5000.00 |     10 | PRESIDENT |
+|          2 |  7788 | SCOTT  | 3000.00 |     20 | ANALYST   |
+|          2 |  7902 | FORD   | 3000.00 |     20 | ANALYST   |
+|          3 |  7566 | JONES  | 2975.00 |     20 | MANAGER   |
+|          4 |  7698 | BLAKE  | 2850.00 |     30 | MANAGER   |
+|          5 |  7782 | CLARK  | 2450.00 |     10 | MANAGER   |
+|          6 |  7499 | ALLEN  | 1600.00 |     30 | SALESMAN  |
+|          7 |  7844 | TURNER | 1500.00 |     30 | SALESMAN  |
+|          8 |  7934 | MILLER | 1300.00 |     10 | CLERK     |
+|          9 |  7521 | WARD   | 1250.00 |     30 | SALESMAN  |
+|          9 |  7654 | MARTIN | 1250.00 |     30 | SALESMAN  |
+|         10 |  7876 | ADAMS  | 1100.00 |     20 | CLERK     |
+|         11 |  7900 | JAMES  |  950.00 |     30 | CLERK     |
+|         12 |  7369 | SMITH  |  800.00 |     20 | CLERK     |
++------------+-------+--------+---------+--------+-----------+
+14 rows in set (0.00 sec)
+
+
+
+
+mysql> select DENSE_RANK() OVER(PARTITION by deptno ORDER by sal desc) as `dense_rank` , empno , ename,sal,deptno,job from emp;
++------------+-------+--------+---------+--------+-----------+
+| dense_rank | empno | ename  | sal     | deptno | job       |
++------------+-------+--------+---------+--------+-----------+
+|          1 |  7839 | KING   | 5000.00 |     10 | PRESIDENT |
+|          2 |  7782 | CLARK  | 2450.00 |     10 | MANAGER   |
+|          3 |  7934 | MILLER | 1300.00 |     10 | CLERK     |
+|          1 |  7788 | SCOTT  | 3000.00 |     20 | ANALYST   |
+|          1 |  7902 | FORD   | 3000.00 |     20 | ANALYST   |
+|          2 |  7566 | JONES  | 2975.00 |     20 | MANAGER   |
+|          3 |  7876 | ADAMS  | 1100.00 |     20 | CLERK     |
+|          4 |  7369 | SMITH  |  800.00 |     20 | CLERK     |
+|          1 |  7698 | BLAKE  | 2850.00 |     30 | MANAGER   |
+|          2 |  7499 | ALLEN  | 1600.00 |     30 | SALESMAN  |
+|          3 |  7844 | TURNER | 1500.00 |     30 | SALESMAN  |
+|          4 |  7521 | WARD   | 1250.00 |     30 | SALESMAN  |
+|          4 |  7654 | MARTIN | 1250.00 |     30 | SALESMAN  |
+|          5 |  7900 | JAMES  |  950.00 |     30 | CLERK     |
++------------+-------+--------+---------+--------+-----------+
+14 rows in set (0.00 sec)
+
+
+        [we learning this, why we need CTE]
+
+
+>> to get all dense_rank = 1 values
+
+*** we can't use windown function in where , so we use subquery  ***
+
+mysql> select DENSE_RANK() OVER(PARTITION by deptno ORDER by sal desc) as `dense_rank` , empno , ename,sal,deptno,job from emp where sal in (select max(sal) from emp group by deptno);
++------------+-------+-------+---------+--------+-----------+
+| dense_rank | empno | ename | sal     | deptno | job       |
++------------+-------+-------+---------+--------+-----------+
+|          1 |  7839 | KING  | 5000.00 |     10 | PRESIDENT |
+|          1 |  7788 | SCOTT | 3000.00 |     20 | ANALYST   |
+|          1 |  7902 | FORD  | 3000.00 |     20 | ANALYST   |
+|          1 |  7698 | BLAKE | 2850.00 |     30 | MANAGER   |
++------------+-------+-------+---------+--------+-----------+
+4 rows in set (0.00 sec)
+
+
+-----------------
+
+LEAD()  
+- fetches the next leading row value
+
+
+LAG()
+- fethches the previous row value
+
+
+
+
+mysql> select empno, ename,sal,LEAD(sal) over() lead_sal from emp;
++-------+--------+---------+----------+
+| empno | ename  | sal     | lead_sal |
++-------+--------+---------+----------+
+|  7369 | SMITH  |  800.00 |  1600.00 |
+|  7499 | ALLEN  | 1600.00 |  1250.00 |
+|  7521 | WARD   | 1250.00 |  2975.00 |
+|  7566 | JONES  | 2975.00 |  1250.00 |
+|  7654 | MARTIN | 1250.00 |  2850.00 |
+|  7698 | BLAKE  | 2850.00 |  2450.00 |
+|  7782 | CLARK  | 2450.00 |  3000.00 |
+|  7788 | SCOTT  | 3000.00 |  5000.00 |
+|  7839 | KING   | 5000.00 |  1500.00 |
+|  7844 | TURNER | 1500.00 |  1100.00 |
+|  7876 | ADAMS  | 1100.00 |   950.00 |
+|  7900 | JAMES  |  950.00 |  3000.00 |
+|  7902 | FORD   | 3000.00 |  1300.00 |
+|  7934 | MILLER | 1300.00 |     NULL |
++-------+--------+---------+----------+
+14 rows in set (0.00 sec)
+
+
+
+
+mysql> select empno, ename,sal,LAG(sal) over() lead_sal from emp;
++-------+--------+---------+----------+
+| empno | ename  | sal     | lead_sal |
++-------+--------+---------+----------+
+|  7369 | SMITH  |  800.00 |     NULL |
+|  7499 | ALLEN  | 1600.00 |   800.00 |
+|  7521 | WARD   | 1250.00 |  1600.00 |
+|  7566 | JONES  | 2975.00 |  1250.00 |
+|  7654 | MARTIN | 1250.00 |  2975.00 |
+|  7698 | BLAKE  | 2850.00 |  1250.00 |
+|  7782 | CLARK  | 2450.00 |  2850.00 |
+|  7788 | SCOTT  | 3000.00 |  2450.00 |
+|  7839 | KING   | 5000.00 |  3000.00 |
+|  7844 | TURNER | 1500.00 |  5000.00 |
+|  7876 | ADAMS  | 1100.00 |  1500.00 |
+|  7900 | JAMES  |  950.00 |  1100.00 |
+|  7902 | FORD   | 3000.00 |   950.00 |
+|  7934 | MILLER | 1300.00 |  3000.00 |
++-------+--------+---------+----------+
+14 rows in set (0.00 sec)
+
+
+
+--------
+mysql> select empno, ename,sal,LEAD(sal) over(order by sal) lead_sa
+l from emp;
++-------+--------+---------+----------+
+| empno | ename  | sal     | lead_sal |
++-------+--------+---------+----------+
+|  7369 | SMITH  |  800.00 |   950.00 |
+|  7900 | JAMES  |  950.00 |  1100.00 |
+|  7876 | ADAMS  | 1100.00 |  1250.00 |
+|  7521 | WARD   | 1250.00 |  1250.00 |
+|  7654 | MARTIN | 1250.00 |  1300.00 |
+|  7934 | MILLER | 1300.00 |  1500.00 |
+|  7844 | TURNER | 1500.00 |  1600.00 |
+|  7499 | ALLEN  | 1600.00 |  2450.00 |
+|  7782 | CLARK  | 2450.00 |  2850.00 |
+|  7698 | BLAKE  | 2850.00 |  2975.00 |
+|  7566 | JONES  | 2975.00 |  3000.00 |
+|  7788 | SCOTT  | 3000.00 |  3000.00 |
+|  7902 | FORD   | 3000.00 |  5000.00 |
+|  7839 | KING   | 5000.00 |     NULL |
++-------+--------+---------+----------+
+14 rows in set (0.00 sec)
+
+mysql> select empno, ename,sal,LAG(sal) over(order by sal) lead_sal
+ from emp;
++-------+--------+---------+----------+
+| empno | ename  | sal     | lead_sal |
++-------+--------+---------+----------+
+|  7369 | SMITH  |  800.00 |     NULL |
+|  7900 | JAMES  |  950.00 |   800.00 |
+|  7876 | ADAMS  | 1100.00 |   950.00 |
+|  7521 | WARD   | 1250.00 |  1100.00 |
+|  7654 | MARTIN | 1250.00 |  1250.00 |
+|  7934 | MILLER | 1300.00 |  1250.00 |
+|  7844 | TURNER | 1500.00 |  1300.00 |
+|  7499 | ALLEN  | 1600.00 |  1500.00 |
+|  7782 | CLARK  | 2450.00 |  1600.00 |
+|  7698 | BLAKE  | 2850.00 |  2450.00 |
+|  7566 | JONES  | 2975.00 |  2850.00 |
+|  7788 | SCOTT  | 3000.00 |  2975.00 |
+|  7902 | FORD   | 3000.00 |  3000.00 |
+|  7839 | KING   | 5000.00 |  3000.00 |
++-------+--------+---------+----------+
+14 rows in set (0.00 sec)
+----------------------------------------
+
+
+
+>> leading(sal)  and partition based on deptno
+
+
+mysql> select empno, ename,deptno,sal,LEAD(sal) over(partition by d
+eptno) lead_sal from emp;
++-------+--------+--------+---------+----------+
+| empno | ename  | deptno | sal     | lead_sal |
++-------+--------+--------+---------+----------+
+|  7782 | CLARK  |     10 | 2450.00 |  5000.00 |
+|  7839 | KING   |     10 | 5000.00 |  1300.00 |
+|  7934 | MILLER |     10 | 1300.00 |     NULL |
+|  7369 | SMITH  |     20 |  800.00 |  2975.00 |
+|  7566 | JONES  |     20 | 2975.00 |  3000.00 |
+|  7788 | SCOTT  |     20 | 3000.00 |  1100.00 |
+|  7876 | ADAMS  |     20 | 1100.00 |  3000.00 |
+|  7902 | FORD   |     20 | 3000.00 |     NULL |
+|  7499 | ALLEN  |     30 | 1600.00 |  1250.00 |
+|  7521 | WARD   |     30 | 1250.00 |  1250.00 |
+|  7654 | MARTIN |     30 | 1250.00 |  2850.00 |
+|  7698 | BLAKE  |     30 | 2850.00 |  1500.00 |
+|  7844 | TURNER |     30 | 1500.00 |   950.00 |
+|  7900 | JAMES  |     30 |  950.00 |     NULL |
++-------+--------+--------+---------+----------+
+14 rows in set (0.00 sec)
+
+
+>> lag(sal) and parition by deptno
+
+mysql> select empno, ename,deptno,sal,LAG(sal) over(partition by de
+ptno) lead_sal from emp;
++-------+--------+--------+---------+----------+
+| empno | ename  | deptno | sal     | lead_sal |
++-------+--------+--------+---------+----------+
+|  7782 | CLARK  |     10 | 2450.00 |     NULL |
+|  7839 | KING   |     10 | 5000.00 |  2450.00 |
+|  7934 | MILLER |     10 | 1300.00 |  5000.00 |
+|  7369 | SMITH  |     20 |  800.00 |     NULL |
+|  7566 | JONES  |     20 | 2975.00 |   800.00 |
+|  7788 | SCOTT  |     20 | 3000.00 |  2975.00 |
+|  7876 | ADAMS  |     20 | 1100.00 |  3000.00 |
+|  7902 | FORD   |     20 | 3000.00 |  1100.00 |
+|  7499 | ALLEN  |     30 | 1600.00 |     NULL |
+|  7521 | WARD   |     30 | 1250.00 |  1600.00 |
+|  7654 | MARTIN |     30 | 1250.00 |  1250.00 |
+|  7698 | BLAKE  |     30 | 2850.00 |  1250.00 |
+|  7844 | TURNER |     30 | 1500.00 |  2850.00 |
+|  7900 | JAMES  |     30 |  950.00 |  1500.00 |
++-------+--------+--------+---------+----------+
+14 rows in set (0.00 sec)
+
+
+
+
+
+>>> now i want it partition wise sorted 
+
+mysql> select empno, ename,deptno,sal,LEAD(sal) over(partition by d
+eptno order by sal) lead_sal from emp;
++-------+--------+--------+---------+----------+
+| empno | ename  | deptno | sal     | lead_sal |
++-------+--------+--------+---------+----------+
+|  7934 | MILLER |     10 | 1300.00 |  2450.00 |
+|  7782 | CLARK  |     10 | 2450.00 |  5000.00 |
+|  7839 | KING   |     10 | 5000.00 |     NULL |
+|  7369 | SMITH  |     20 |  800.00 |  1100.00 |
+|  7876 | ADAMS  |     20 | 1100.00 |  2975.00 |
+|  7566 | JONES  |     20 | 2975.00 |  3000.00 |
+|  7788 | SCOTT  |     20 | 3000.00 |  3000.00 |
+|  7902 | FORD   |     20 | 3000.00 |     NULL |
+|  7900 | JAMES  |     30 |  950.00 |  1250.00 |
+|  7521 | WARD   |     30 | 1250.00 |  1250.00 |
+|  7654 | MARTIN |     30 | 1250.00 |  1500.00 |
+|  7844 | TURNER |     30 | 1500.00 |  1600.00 |
+|  7499 | ALLEN  |     30 | 1600.00 |  2850.00 |
+|  7698 | BLAKE  |     30 | 2850.00 |     NULL |
++-------+--------+--------+---------+----------+
+14 rows in set (0.01 sec)
+
+
+********
+>>> FIND next salary increment for the emps based on the job.
+
+
+mysql> select empno, ename,job,sal,LEAD(sal) over(partition by job
+order by sal)  lead_sal, (LEAD(sal) over(partition by job order by
+sal))- sal as next_incre from emp;
++-------+--------+-----------+---------+----------+------------+
+| empno | ename  | job       | sal     | lead_sal | next_incre |
++-------+--------+-----------+---------+----------+------------+
+|  7788 | SCOTT  | ANALYST   | 3000.00 |  3000.00 |       0.00 |
+|  7902 | FORD   | ANALYST   | 3000.00 |     NULL |       NULL |
+|  7369 | SMITH  | CLERK     |  800.00 |   950.00 |     150.00 |
+|  7900 | JAMES  | CLERK     |  950.00 |  1100.00 |     150.00 |
+|  7876 | ADAMS  | CLERK     | 1100.00 |  1300.00 |     200.00 |
+|  7934 | MILLER | CLERK     | 1300.00 |     NULL |       NULL |
+|  7782 | CLARK  | MANAGER   | 2450.00 |  2850.00 |     400.00 |
+|  7698 | BLAKE  | MANAGER   | 2850.00 |  2975.00 |     125.00 |
+|  7566 | JONES  | MANAGER   | 2975.00 |     NULL |       NULL |
+|  7839 | KING   | PRESIDENT | 5000.00 |     NULL |       NULL |
+|  7521 | WARD   | SALESMAN  | 1250.00 |  1250.00 |       0.00 |
+|  7654 | MARTIN | SALESMAN  | 1250.00 |  1500.00 |     250.00 |
+|  7844 | TURNER | SALESMAN  | 1500.00 |  1600.00 |     100.00 |
+|  7499 | ALLEN  | SALESMAN  | 1600.00 |     NULL |       NULL |
++-------+--------+-----------+---------+----------+------------+
+14 rows in set (0.00 sec)
+*******************
+
+=============================================
+
+
+            **  MOVING WINDOW       **
+
+---------------------------------------
+
+DROP table if exists transactions;
+
+Create table transactions (accid INT, txdate DATETIME, amount DOUBLE);
+
+INSERT INTO transactions VALUES
+(1,'2000-01-01',1000),
+(1,'2000-01-02',2000),
+(1,'2000-01-03',-500),
+(1,'2000-01-04',-300),
+(1,'2000-01-05',4000),
+(1,'2000-01-06',-2000),
+(1,'2000-01-07',-200),
+(2,'2000-01-02',3000),
+(2,'2000-01-04',2000),
+(2,'2000-01-06',-1000),
+(3,'2000-01-01',2000),
+(3,'2000-01-03',-1000),
+(3,'2000-01-05',500);
+
+select * from transactions;
+
+
+
+
+
+mysql> select * from transactions where accid=1;
++-------+---------------------+--------+
+| accid | txdate              | amount |
++-------+---------------------+--------+
+|     1 | 2000-01-01 00:00:00 |   1000 |
+|     1 | 2000-01-02 00:00:00 |   2000 |
+|     1 | 2000-01-03 00:00:00 |   -500 |
+|     1 | 2000-01-04 00:00:00 |   -300 |
+|     1 | 2000-01-05 00:00:00 |   4000 |
+|     1 | 2000-01-06 00:00:00 |  -2000 |
+|     1 | 2000-01-07 00:00:00 |   -200 |
++-------+---------------------+--------+
+7 rows in set (0.00 sec)
+
+
+problem - we want running balance for all the rows , as i do the second transaction the running balance should increame means out partition size is 2 now, and so on increase/Grow the partition window.   
+So we want to create this MOVING window
+
+- for this we use ROWS() , RANGE()  with OVER() clause
+
+
+in over we can use :-
+
+over -> empty 
+     -> parition by
+     -> order by
+     -> ROWS | RANGE
+
+
+
+- frst row of this partiton is known as UNBOUNDED PRECEDING
+- last row of this partition is known as UNBOUNDED PRECEDINGN
+- in current running window parition (latest row) where we are having operation is known as CURRENT ROW
+
+when window moves (grows) ,  
+
+
+
+
+OVER(RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED PRECEDING)
+
+
+
+OVER(RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+
+
+OVER(ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+
+
+
+
+
+---------------------------
+

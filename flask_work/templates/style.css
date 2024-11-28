@@ -1,0 +1,76 @@
+/* Store this code in 'style.css' file inside the 'static' folder */
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f4f8; /* Light background color for contrast */
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 600px; /* Maximum width for the content */
+    margin: auto; /* Center the container */
+    padding: 20px;
+    background-color: white; /* White background for content area */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+header {
+    text-align: center; /* Center header text */
+    background-color: #007bff; /* Bright blue header */
+    color: white;
+    padding: 20px;
+    border-radius: 8px 8px 0 0; /* Rounded top corners */
+}
+
+.title {
+    margin: 0;
+}
+
+.content {
+    padding: 20px; /* Padding inside content area */
+}
+
+.textbox {
+    width: calc(100% - 20px); /* Full width minus padding */
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc; /* Light gray border */
+}
+
+.btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745; /* Green button */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold; /* Bold text for buttons */
+}
+
+.btn:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+.msg {
+    margin-bottom: 15px;
+    color: #d9534f; /* Red color for error messages */
+}
+
+footer {
+   text-align:center; 
+   margin-top:30px; 
+   font-size:.8em; 
+   color:#666; 
+}
+
+a {
+    color: #007bff; /* Link color */
+}
+
+a:hover {
+    text-decoration: underline; /* Underline links on hover */
+}

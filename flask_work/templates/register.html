@@ -1,0 +1,30 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title">Create Your Account</h1>
+        </header>
+        <div class="content">
+            <div class="msg">{{ msg }}</div>  <!-- Display registration messages -->
+            <form action="{{ url_for('register') }}" method="post">
+                <input id="username" name="username" type="text" placeholder="Enter Your Username" class="textbox" required/>
+                <input id="password" name="password" type="password" placeholder="Enter Your Password" class="textbox" required/>
+                <input id="email" name="email" type="email" placeholder="Enter Your Email ID" class="textbox" required/>
+                <input type="submit" class="btn" value="Sign Up"/>
+            </form>
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign In here</a></p>
+            <p>If you need help, contact our support team.</p> <!-- Additional help -->
+        </div>
+        <footer>
+            <p>&copy; 2024 Your Application. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

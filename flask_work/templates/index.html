@@ -1,0 +1,25 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title">Welcome, {{ session['username'] }}!</h1>
+        </header>
+        <div class="content">
+            <div class="msg">{{ msg }}</div>  <!-- Display any messages -->
+            <p>You are now logged in. Explore our features!</p>
+            <a class="btn" href="{{ url_for('logout') }}">Logout</a>
+            <p>Want to go back to the login page? <a href="{{ url_for('login') }}">Login again</a></p>
+        </div>
+        <footer>
+            <p>&copy; 2024 Your Application. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
