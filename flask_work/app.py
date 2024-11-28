@@ -1,25 +1,23 @@
-# Store this code in 'app.py' file
-
 from flask import Flask, render_template, request, redirect, url_for, session
 import re
 import mysql.connector
-
-# -----------------------------
+from werkzeug.security import generate_password_hash, check_password_hash
+from transformers import pipeline
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
-
+app.secret_key = 'your_secret_key'  # Use an environment variable in production
 
 mydb = mysql.connector.connect(
     host='localhost',
-    user='root', 
+    user='root',
     password='manager',
     database='summarylogin'
 )
 
-mycursor = mydb.cursor(dictionary=True)  
+mycursor = mydb.cursor(dictionary=True)
 
-# -----------------------------
+# Initialize the summarization pipeline
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 @app.route('/')
 @app.route('/login', methods=['GET', 'POST'])
@@ -29,15 +27,14 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        mycursor.execute('SELECT * FROM accounts WHERE username = %s AND password = %s', (username, password))
+        mycursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
         account = mycursor.fetchone()
         
-        if account:
+        if account and check_password_hash(account['password'], password):
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account['username']
-            msg = 'Logged in successfully!'
-            return render_template('index.html', msg=msg)
+            return redirect(url_for('index'))
         else:
             msg = 'Incorrect username/password!'
     
@@ -49,6 +46,20 @@ def logout():
     session.pop('id', None)
     session.pop('username', None)
     return redirect(url_for('login'))
+
+@app.route('/index', methods=['GET', 'POST'])
+def index():
+    if not session.get('loggedin'):
+        return redirect(url_for('login'))
+    
+    summary_text = ""
+    
+    if request.method == 'POST':
+        text_to_summarize = request.form.get("article", "")
+        if text_to_summarize:
+            summary_text = summarizer(text_to_summarize, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
+    
+    return render_template('index.html', summary=summary_text)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -71,8 +82,9 @@ def register():
             if account:
                 msg = 'Account already exists!'
             else:
+                hashed_password = generate_password_hash(password)
                 mycursor.execute('INSERT INTO accounts (username, password, email) VALUES (%s, %s, %s)', 
-                                 (username, password, email))
+                                 (username, hashed_password, email))
                 mydb.commit()
                 msg = 'You have successfully registered! You can now log in.'
     
