@@ -1,0 +1,1050 @@
+
+problem - we want running balance for all the rows , as i do the second transaction the running balance should increame means out partition size is 2 now, and so on increase/Grow the partition window.   
+So we want to create this MOVING window
+
+- for this we use ROWS() , RANGE()  with OVER() clause
+
+
+in over we can use :-
+
+over -> empty 
+     -> parition by
+     -> order by
+     -> ROWS | RANGE
+
+
+
+- frst row of this partiton is known as UNBOUNDED PRECEDING
+- last row of this partition is known as UNBOUNDED FOllowing
+- in current running window parition (latest row) where we are having operation is known as CURRENT ROW
+
+when window moves (grows) ,  
+
+
+
+
+OVER(RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED PRECEDING)
+
+
+
+OVER(RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)  [this is default]
+
+
+OVER(ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+
+
+
+
+over() - if nothing is mentioned then it will consider whole range as partition, basically whole frame -> OVER(RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+
+
+
+FRAME  - unbounded preceding and unbounded following (whole view)
+
+
+unbounded preceding, means start from top of the table
+
+========================================================================
+
+
+mysql> select * from transactions;
++-------+---------------------+--------+
+| accid | txdate              | amount |
++-------+---------------------+--------+
+|     1 | 2000-01-01 00:00:00 |   1000 |
+|     1 | 2000-01-02 00:00:00 |   2000 |
+|     1 | 2000-01-03 00:00:00 |   -500 |
+|     1 | 2000-01-04 00:00:00 |   -300 |
+|     1 | 2000-01-05 00:00:00 |   4000 |
+|     1 | 2000-01-06 00:00:00 |  -2000 |
+|     1 | 2000-01-07 00:00:00 |   -200 |
+|     2 | 2000-01-02 00:00:00 |   3000 |
+|     2 | 2000-01-04 00:00:00 |   2000 |
+|     2 | 2000-01-06 00:00:00 |  -1000 |
+|     3 | 2000-01-01 00:00:00 |   2000 |
+|     3 | 2000-01-03 00:00:00 |  -1000 |
+|     3 | 2000-01-05 00:00:00 |    500 |
++-------+---------------------+--------+
+13 rows in set (0.00 sec)
+
+
+
+---------------------------------------------------
+- OVER(ORDER BY txdate)
+- range that is considered here is, UNBOUNDED PRECEDING AND CURRENT ROW
+
+mysql> select accid,txdate,amount,sum(amount) over(order by txdate) as balance  from transactions where accid = 1;
++-------+---------------------+--------+---------+
+| accid | txdate              | amount | balance |
++-------+---------------------+--------+---------+
+|     1 | 2000-01-01 00:00:00 |   1000 |    1000 |
+|     1 | 2000-01-02 00:00:00 |   2000 |    3000 |
+|     1 | 2000-01-03 00:00:00 |   -500 |    2500 |
+|     1 | 2000-01-04 00:00:00 |   -300 |    2200 |
+|     1 | 2000-01-05 00:00:00 |   4000 |    6200 |
+|     1 | 2000-01-06 00:00:00 |  -2000 |    4200 |
+|     1 | 2000-01-07 00:00:00 |   -200 |    4000 |
++-------+---------------------+--------+---------+
+7 rows in set (0.01 sec)
+
+initially current row will be first one and it goes to next and keep changing the balance according to amount.
+
+-----------------------------------------------------------------
+
+        now check the problem when we insert transaction happening on same day
+
+
+mysql> insert into transactions values(1,'2000-01-08',1000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into transactions values(1,'2000-01-08',2000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select accid,txdate,amount,sum(amount) over(order by txdate) as balance  from transactions where accid = 1;
++-------+---------------------+--------+---------+
+| accid | txdate              | amount | balance |
++-------+---------------------+--------+---------+
+|     1 | 2000-01-01 00:00:00 |   1000 |    1000 |
+|     1 | 2000-01-02 00:00:00 |   2000 |    3000 |
+|     1 | 2000-01-03 00:00:00 |   -500 |    2500 |
+|     1 | 2000-01-04 00:00:00 |   -300 |    2200 |
+|     1 | 2000-01-05 00:00:00 |   4000 |    6200 |
+|     1 | 2000-01-06 00:00:00 |  -2000 |    4200 |
+|     1 | 2000-01-07 00:00:00 |   -200 |    4000 |
+|     1 | 2000-01-08 00:00:00 |   1000 |    7000 |
+|     1 | 2000-01-08 00:00:00 |   2000 |    7000 |
++-------+---------------------+--------+---------+
+9 rows in set (0.00 sec)
+
+- its showing direct 7000 for both the transaction 
+
+
+over(order by txdate)  =  will work as below
+-> OVER(RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)   
+
+Problem here is with the range - unbounded preceding and current row    
+    - (here current row is group of rows and considers it as a single row) 
+
+- its considering simmilar rows as current row , and thats why calculations is fked, so use ROWS instead of RANGE.
+    (then it will consider only that row that is current , not others)
+
+---------------------------------------------------
+
+So to solve this , for individual rows m we need to change our statement as
+
+-> ROWS BETWEEN UNBOUNDED PRECEDDING AND CURRENT ROWS
+[ROWS instead of RANGE]
+
+
+
+
+mysql> select accid,txdate,amount,sum(amount) over(ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as balance  from transactions where accid = 1;
++-------+---------------------+--------+---------+
+| accid | txdate              | amount | balance |
++-------+---------------------+--------+---------+
+|     1 | 2000-01-01 00:00:00 |   1000 |    1000 |
+|     1 | 2000-01-02 00:00:00 |   2000 |    3000 |
+|     1 | 2000-01-03 00:00:00 |   -500 |    2500 |
+|     1 | 2000-01-04 00:00:00 |   -300 |    2200 |
+|     1 | 2000-01-05 00:00:00 |   4000 |    6200 |
+|     1 | 2000-01-06 00:00:00 |  -2000 |    4200 |
+|     1 | 2000-01-07 00:00:00 |   -200 |    4000 |
+|     1 | 2000-01-08 00:00:00 |   1000 |    5000 |
+|     1 | 2000-01-08 00:00:00 |   2000 |    7000 |
++-------+---------------------+--------+---------+
+9 rows in set (0.00 sec)
+
+
+- consider every ringle row individual  over(ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+
+-----------------------------------------------------------
+
+--- test case
+
+mysql> select accid,txdate,amount,sum(amount) over(ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) as balance  from transactions where accid = 1;
++-------+---------------------+--------+---------+
+| accid | txdate              | amount | balance |
++-------+---------------------+--------+---------+
+|     1 | 2000-01-01 00:00:00 |   1000 |    3000 |
+|     1 | 2000-01-02 00:00:00 |   2000 |    2500 |
+|     1 | 2000-01-03 00:00:00 |   -500 |    1200 |
+|     1 | 2000-01-04 00:00:00 |   -300 |    3200 |
+|     1 | 2000-01-05 00:00:00 |   4000 |    1700 |
+|     1 | 2000-01-06 00:00:00 |  -2000 |    1800 |
+|     1 | 2000-01-07 00:00:00 |   -200 |   -1200 |
+|     1 | 2000-01-08 00:00:00 |   1000 |    2800 |
+|     1 | 2000-01-08 00:00:00 |   2000 |    3000 |
++-------+---------------------+--------+---------+
+9 rows in set (0.00 sec)
+
+we can customize it according to the requirement -
+ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING
+
+3000 - frame size is starting two rows
+2500 - frame size is (100+2000-500)  [one above, current , one below]
+1200 - frame size is (2000 - 500 - 300)   (ek row above and ek below)
+
+
+
+- lets see more
+
+mysql> select accid, txdate, amount,sum(amount) OVER(rows between 2 preceding and 1 following) as balance from transactions where accid =1;
++-------+---------------------+--------+---------+
+| accid | txdate              | amount | balance |
++-------+---------------------+--------+---------+
+|     1 | 2000-01-01 00:00:00 |   1000 |    3000 |
+|     1 | 2000-01-02 00:00:00 |   2000 |    2500 |
+|     1 | 2000-01-03 00:00:00 |   -500 |    2200 |
+|     1 | 2000-01-04 00:00:00 |   -300 |    5200 |
+|     1 | 2000-01-05 00:00:00 |   4000 |    1200 |
+|     1 | 2000-01-06 00:00:00 |  -2000 |    1500 |
+|     1 | 2000-01-07 00:00:00 |   -200 |    2800 |
+|     1 | 2000-01-08 00:00:00 |   1000 |     800 |
+|     1 | 2000-01-08 00:00:00 |   2000 |    2800 |
++-------+---------------------+--------+---------+
+9 rows in set (0.00 sec)
+
+
+-- one more
+
+mysql> select accid, txdate, amount,sum(amount) OVER(rows between 3 precedi
+ng and 3 following) as balance from transactions where accid =1;
++-------+---------------------+--------+---------+
+| accid | txdate              | amount | balance |
++-------+---------------------+--------+---------+
+|     1 | 2000-01-01 00:00:00 |   1000 |    2200 |
+|     1 | 2000-01-02 00:00:00 |   2000 |    6200 |
+|     1 | 2000-01-03 00:00:00 |   -500 |    4200 |
+|     1 | 2000-01-04 00:00:00 |   -300 |    4000 |
+|     1 | 2000-01-05 00:00:00 |   4000 |    4000 |
+|     1 | 2000-01-06 00:00:00 |  -2000 |    4000 |
+|     1 | 2000-01-07 00:00:00 |   -200 |    4500 |
+|     1 | 2000-01-08 00:00:00 |   1000 |    4800 |
+|     1 | 2000-01-08 00:00:00 |   2000 |     800 |
++-------+---------------------+--------+---------+
+9 rows in set (0.00 sec)
+
+- 2200 = 1000 + (2000 - 500 -300)
+
+- 4000 = (1000+2000-500) - 300 + (4000-2000-200)
+
+---------------------------------------------------------------------
+
+
+GROUP by with ROLLUP
+GROUPING()
+
+windows functions 
+    1. AGGREGATE 
+            - max,min,sum
+            - OVER() is not mandatory
+    2. Non-AGGREGATE
+            - must use OVER clause 
+
+
+group functions 
+= reduces the number of output (only 1 output row for n rows)
+
+vs
+
+Window functions
+= m output rows for n input rows
+
+
+
+what can we have in OVER clause :
+- it can be empty: OVER()
+            RANGE - unbounded precedding and unbounded following
+- it can have PARTITION by: 
+- it can have ORDER by: 
+            RANGE - unbounded precedding and current row
+- it can have ROWS|RANGE
+            RANGE : if ROWS ->OVER(rows between 3 precedi
+ng and 3 following)
+
+
+----------------------------------------
+
+
+
+- if we have multiple tables join and subqueries then Create view for some task
+    we use CTE for making life easy
+
+
+=================================================================
+
+        ** CTE **
+
+
+- its a virtual table
+- type :  
+        1. Non-Recursive CTE
+        2. Recursive CTE
+
+
+- make sure to have alias for all the computed column in cte
+
+----------------------------
+
+1. Display emp name , salary , category of the employee.
+
+mysql> select ename , sal , if (sal>2500, "Rich", "Poor") as category from
+emp;
++--------+---------+----------+
+| ename  | sal     | category |
++--------+---------+----------+
+| SMITH  |  800.00 | Poor     |
+| ALLEN  | 1600.00 | Poor     |
+| WARD   | 1250.00 | Poor     |
+| JONES  | 2975.00 | Rich     |
+| MARTIN | 1250.00 | Poor     |
+| BLAKE  | 2850.00 | Rich     |
+| CLARK  | 2450.00 | Poor     |
+| SCOTT  | 3000.00 | Rich     |
+| KING   | 5000.00 | Rich     |
+| TURNER | 1500.00 | Poor     |
+| ADAMS  | 1100.00 | Poor     |
+| JAMES  |  950.00 | Poor     |
+| FORD   | 3000.00 | Rich     |
+| MILLER | 1300.00 | Poor     |
++--------+---------+----------+
+14 rows in set (0.00 sec)
+
+2. Now display category wise count of emps
+
+mysql> select category,count(category) category_count FROM (select ename,sal, if(sal>=2500,'RICH','POOR') category FROM emp) as emp_category GROUP by
+category;
++----------+----------------+
+| category | category_count |
++----------+----------------+
+| POOR     |              9 |
+| RICH     |              5 |
++----------+----------------+
+2 rows in set (0.00 sec)
+
+
+or 
+
+
+
+mysql> create view v_emp_category as SELECT ename,sal,if(sal>2500,'RICH','POOR') category FROM emp;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select category , count(category) category_count from v_emp_category group by category;
++----------+----------------+
+| category | category_count |
++----------+----------------+
+| POOR     |              9 |
+| RICH     |              5 |
++----------+----------------+
+2 rows in set (0.01 sec)
+                [better readability]
+
+-----------------------------------------------
+
+            - virtual table   (CTE)- 
+
+- query becomes simple in reading and understanding
+- we also dont have to store the views in the tables now
+
+
+
+mysql> WITH emp_category AS(
+    ->     SELECT ename,sal,if(sal>2500,'RICH','POOR') category FROM emp
+    -> )
+    -> SELECT category,COUNT(category) category_count FROM emp_category GROUP BY category;
++----------+----------------+
+| category | category_count |
++----------+----------------+
+| POOR     |              9 |
+| RICH     |              5 |
++----------+----------------+
+2 rows in set (0.00 sec)
+
+
+
+
+
+3. Display emps with highest sal from each dept
+
+
+
+mysql> select * from emp  e1 where sal =(select max(sal) from emp e2 where
+e1.deptno = e2.deptno);
++-------+-------+-----------+------+------------+---------+------+--------+
+| empno | ename | job       | mgr  | hire       | sal     | comm | deptno |
++-------+-------+-----------+------+------------+---------+------+--------+
+|  7698 | BLAKE | MANAGER   | 7839 | 1981-05-01 | 2850.00 | NULL |     30 |
+|  7788 | SCOTT | ANALYST   | 7566 | 1982-12-09 | 3000.00 | NULL |     20 |
+|  7839 | KING  | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
+|  7902 | FORD  | ANALYST   | 7566 | 1981-12-03 | 3000.00 | NULL |     20 |
++-------+-------+-----------+------+------------+---------+------+--------+
+4 rows in set (0.00 sec)
+
+
+
+
+with dept_max_sal as(
+    select deptno , max(sal) max_sal from emp group by deptno
+) 
+select * from emp e INNER  JOIN dept_sal d ON e.deptno = d.deptno where e.sal = d.max_sal;
+
+
+
+mysql> with dept_max_sal as( select deptno , max(sal) max_sal from emp
+group by deptno )  select e.* from emp e INNER  JOIN dept_max_sal d ON e.de
+ptno = d.deptno where e.sal = d.max_sal;
++-------+-------+-----------+------+------------+---------+------+--------+
+| empno | ename | job       | mgr  | hire       | sal     | comm | deptno |
++-------+-------+-----------+------+------------+---------+------+--------+
+|  7698 | BLAKE | MANAGER   | 7839 | 1981-05-01 | 2850.00 | NULL |     30 |
+|  7788 | SCOTT | ANALYST   | 7566 | 1982-12-09 | 3000.00 | NULL |     20 |
+|  7839 | KING  | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
+|  7902 | FORD  | ANALYST   | 7566 | 1981-12-03 | 3000.00 | NULL |     20 |
++-------+-------+-----------+------+------------+---------+------+--------+
+4 rows in set (0.00 sec)
+
+
+
+
+
+4. Display rank of all emps from the dept with higesht sal as rank 1   
+
+
+
+----    see the virtual table 
+
+mysql> select RANK() OVER(PARTITION by deptno ORDER by sal desc) as 'rank'
+    -> , ename, sal, deptno, job from emp;
++------+--------+---------+--------+-----------+
+| rank | ename  | sal     | deptno | job       |
++------+--------+---------+--------+-----------+
+|    1 | KING   | 5000.00 |     10 | PRESIDENT |
+|    2 | CLARK  | 2450.00 |     10 | MANAGER   |
+|    3 | MILLER | 1300.00 |     10 | CLERK     |
+|    1 | SCOTT  | 3000.00 |     20 | ANALYST   |
+|    1 | FORD   | 3000.00 |     20 | ANALYST   |
+|    3 | JONES  | 2975.00 |     20 | MANAGER   |
+|    4 | ADAMS  | 1100.00 |     20 | CLERK     |
+|    5 | SMITH  |  800.00 |     20 | CLERK     |
+|    1 | BLAKE  | 2850.00 |     30 | MANAGER   |
+|    2 | ALLEN  | 1600.00 |     30 | SALESMAN  |
+|    3 | TURNER | 1500.00 |     30 | SALESMAN  |
+|    4 | WARD   | 1250.00 |     30 | SALESMAN  |
+|    4 | MARTIN | 1250.00 |     30 | SALESMAN  |
+|    6 | JAMES  |  950.00 |     30 | CLERK     |
++------+--------+---------+--------+-----------+
+14 rows in set (0.00 sec)
+
+-----
+
+
+
+WITH dept_rank as (
+    select RANK() OVER(PARTITION by deptno ORDER by sal desc) as 'rank',ename, sal, deptno, job from emp
+)
+Select * from dept_rank where `rank` = 1;
+
+
+mysql> WITH dept_rank as (    select RANK() OVER(PARTITION by deptno ORDER by sal desc) as 'rank',ename, sal, deptno, job from emp)Select * from dept_rank where `rank` = 1;
++------+-------+---------+--------+-----------+
+| rank | ename | sal     | deptno | job       |
++------+-------+---------+--------+-----------+
+|    1 | KING  | 5000.00 |     10 | PRESIDENT |
+|    1 | SCOTT | 3000.00 |     20 | ANALYST   |
+|    1 | FORD  | 3000.00 |     20 | ANALYST   |
+|    1 | BLAKE | 2850.00 |     30 | MANAGER   |
++------+-------+---------+--------+-----------+
+4 rows in set (0.00 sec)
+
+
+-------------
+
+
+
+
+5. Dispplay emps from every dept with second highest salary
+
+mysql> WITH dept_rank as (    select DENSE_RANK() OVER(PARTITION by deptno ORDER by sal desc) as 'rank',ename, sal, deptno, job from emp)Select * from dept_rank where `rank` = 2;
++------+-------+---------+--------+----------+
+| rank | ename | sal     | deptno | job      |
++------+-------+---------+--------+----------+
+|    2 | CLARK | 2450.00 |     10 | MANAGER  |
+|    2 | ALLEN | 1600.00 |     30 | SALESMAN |
++------+-------+---------+--------+----------+
+2 rows in set (0.00 sec)
+
+
+above is wrong , cuz no result for dept 20
+
+[ use DENSE_RANK() ]
+    - cuz rank creates gap and give rank 1,1 for JONES and skips 2
+    - so use DENSE_RANK()
+
+
+mysql>  WITH dept_rank as (  select DENSE_RANK() OVER(PARTITION by deptno ORDER by sal desc) as 'rank',ename, sal, deptno, job from emp)Select * from dept_rank where `rank` = 2;
++------+-------+---------+--------+----------+
+| rank | ename | sal     | deptno | job      |
++------+-------+---------+--------+----------+
+|    2 | CLARK | 2450.00 |     10 | MANAGER  |
+|    2 | JONES | 2975.00 |     20 | MANAGER  |
+|    2 | ALLEN | 1600.00 |     30 | SALESMAN |
++------+-------+---------+--------+----------+
+3 rows in set (0.00 sec)
+
+
+
+
+
+
+
+6. Display avg of total salary of all depts
+
+
+with dept_sum as (
+    select deptno, sum(sal) sum_sal from emp group by deptno
+)
+select avg(sum_sal) dept_avg from dept_sum;
+
+
+
+mysql> with dept_sum as (     select deptno, sum(sal) sum_sal from emp group by deptno ) select avg(sum_sal) dept_avg from dept_sum;
++-------------+
+| dept_avg    |
++-------------+
+| 9675.000000 |
++-------------+
+1 row in set (0.00 sec)
+
+
+
+
+------------------------------------
+
+
+        -- RECURSIVE CTE --
+
+
+
+normal recursion needs 3 things : initial call with vlaue , recursive call with updated value , last is the exit condition
+
+
+    seq is the name
+
+WITH RECURSIVE seq(n) AS(
+    (SELECT 1)   -- initial value seq(1)   [known as Anchor]
+    UNION          -- union the result
+    (SELECT n+1 from seq            -- [Recursive memeber]  call with updated value 
+    WHERE n<5 )       -- condition 
+)
+select * from seq;
+
+
+
+mysql> with recursive seq(n) as(
+    ->     (select 1)
+    ->     UNION
+    ->     (select n+1 from seq where n< 5)
+    -> )
+    -> select * from seq;
++------+
+| n    |
++------+
+|    1 |
+|    2 |
+|    3 |
+|    4 |
+|    5 |
++------+
+5 rows in set (0.01 sec)
+
+
+
+============================================
+
+[cant user alias in where cuz abhi tak wo column bana hi nahi hai]
+
+
+1. Display years in which emps were hired from 1981 to 1985
+
+
+
+-- normal way
+mysql> select distinct year(hire)  from emp where year(hire) between 1981  and 1985;
++------------+
+| year(hire) |
++------------+
+|       1981 |
+|       1982 |
+|       1983 |
++------------+
+3 rows in set (0.00 sec)
+
+
+
+
+with recursive years(yr) AS (
+    (SELECT 1981)
+    UNION
+    (SELECT yr+1 from years where yr<1985)
+) 
+select distinct YEAR(hire) as yrs from emp where YEAR(hire) in (Select yr FROM years) ;
+
+
+mysql> with recursive years(yr) AS (
+    ->     (SELECT 1981)
+    ->     UNION
+    ->     (SELECT yr+1 from years where yr<1985)
+    -> ) 
+    -> select distinct YEAR(hire) as yrs from emp where YEAR(hire) in (Select yr FROM years) ;
++------+
+| yrs  |
++------+
+| 1981 |
+| 1982 |
+| 1983 |
++------+
+3 rows in set (0.00 sec)
+
+-------------------
+
+[not compulsory to give n in seq but make sure to give alias in anchor] 
+
+WITH RECURSIVE seq AS(
+    (select 1 AS n)         -- anchor
+    union
+    (select n+1 from seq
+    where n<5)
+) select * from seq;
+
++------+
+| n    |
++------+
+|    1 |
+|    2 |
+|    3 |
+|    4 |
+|    5 |
++------+
+5 rows in set (0.00 sec)
+
+
+
+--------------
+
+with recursive years AS(
+    (select 1981 as yr)
+    union
+    (select yr+1 from years where yr<1985)
+)
+select distinct year(hire) yrs from emp where year(hire) in
+(select yr from years);
++------+
+| yrs  |
++------+
+| 1981 |
+| 1982 |
+| 1983 |
++------+
+3 rows in set (0.00 sec)
+
+
+
+======================================================================
+
+2. Display level of employees
+
+
+---all are employees in the company ----
+king is not reporting to anyone - level 1
+Emps reporting to (manager)king - level 2
+emps reoirting to above manger(emps) - level 3
+and so on till last level of employee
+
+    -- EDA --
+
+mysql> select e1.ename,e2.ename as mgr  from emp e1 left join emp e2 on e1.mgr = e2.empno;
++--------+-------+
+| ename  | mgr   |
++--------+-------+
+| SMITH  | FORD  |
+| ALLEN  | BLAKE |
+| WARD   | BLAKE |
+| JONES  | KING  |      level 2
+| MARTIN | BLAKE |
+| BLAKE  | KING  |       level 2
+| CLARK  | KING  |          level 2
+| SCOTT  | JONES |
+| KING   | NULL  |      level 1 hona chahiye
+| TURNER | BLAKE |
+| ADAMS  | SCOTT |
+| JAMES  | BLAKE |
+| FORD   | JONES |
+| MILLER | CLARK |
++--------+-------+
+14 rows in set (0.00 sec)
+
+
+step 1: 
+
+mysql> select empno,ename,mgr,sal, 1 as level  from emp where mgr IS NULL;
++-------+-------+------+---------+-------+
+| empno | ename | mgr  | sal     | level |
++-------+-------+------+---------+-------+
+|  7839 | KING  | NULL | 5000.00 |     1 |
++-------+-------+------+---------+-------+
+1 row in set (0.00 sec)
+
+
+step 2:
+
+WITH RECURSIVE emp_hirerachy AS(
+    (select empno,ename,mgr,sal, 1 as level  from emp  where mgr IS NULL)  -- anchor ready
+    UNION
+    (SELECT e.empno,e.ename,e.mgr,e.sal,level+1 from emp e
+    INNER JOIN emp_hirerachy eh on e.mgr = eh.empno)        
+)
+select * from emp_hirerachy;
+
+-- recursive member (number of columns should be same as anchor)
+
+
+mysql> WITH RECURSIVE emp_hirerachy AS(
+    ->     (select empno,ename,mgr,sal, 1 as level  from emp  where mgr IS NULL)  -- anchor ready
+    ->     UNION
+    ->     (SELECT e.empno,e.ename,e.mgr,e.sal,level+1 from emp e
+    ->     INNER JOIN emp_hirerachy eh on e.mgr = eh.empno)        
+    -> )
+    -> select * from emp_hirerachy;
++-------+--------+------+---------+-------+
+| empno | ename  | mgr  | sal     | level |
++-------+--------+------+---------+-------+
+|  7839 | KING   | NULL | 5000.00 |     1 |
+|  7566 | JONES  | 7839 | 2975.00 |     2 |
+|  7698 | BLAKE  | 7839 | 2850.00 |     2 |
+|  7782 | CLARK  | 7839 | 2450.00 |     2 |
+|  7499 | ALLEN  | 7698 | 1600.00 |     3 |
+|  7521 | WARD   | 7698 | 1250.00 |     3 |
+|  7654 | MARTIN | 7698 | 1250.00 |     3 |
+|  7788 | SCOTT  | 7566 | 3000.00 |     3 |
+|  7844 | TURNER | 7698 | 1500.00 |     3 |
+|  7900 | JAMES  | 7698 |  950.00 |     3 |
+|  7902 | FORD   | 7566 | 3000.00 |     3 |
+|  7934 | MILLER | 7782 | 1300.00 |     3 |
+|  7369 | SMITH  | 7902 |  800.00 |     4 |
+|  7876 | ADAMS  | 7788 | 1100.00 |     4 |
++-------+--------+------+---------+-------+
+14 rows in set (0.01 sec)
+
+
+
+- understanding -
+
+1. first anchor is created, starting point of the function and this will be printed in the table
+
+2. then it will go into recursion, where it will again call emp_hirerachy with some changes. [make sure its also producing same amount of column as the anchor]  
+    - total 14 rows will be selectd from emp where they will be intersected on the basis of emp_hirerachy where emp_hirerachy.empno = emp.mgr
+    - king as mgr in emp table , all those emps will be selected in this iteration 
+    - also its level is +1 now. (level 2 for jones,blake,clerk)
+
+3. Now again one more recursion will start from the basis of JUST previous values
+    - again produce same amount of cols , level +1  (3)
+    - again intersection where all above emp having level 2 will be checked if its the mgr for the empno in the current emp of 14 rows
+    - all rows are checked using JOIN and values are fetched one after other
+    = (scot and ford fetched with level 3) done
+
+    - now again one more resursive as there is not stopage , its just the checking condition in the recursion to the previous values
+    - now level 2 empno will be mached with , current 14 rows of emp having mgr = empno(of level 2)
+    - increase the levle (3) 
+    - (allen , ward , martin, turner,james,ford,miller  will be fetched with level 3)
+
+5. now all the empno in level 3 will be checked with all 14 rows of emp table and if emp(mgr) = empno(leve=3) 
+    - then they will be fetched with level 4
+    - (smith and adam are fetched with level as 4)
+
+6. now again the values will be checked and nothing will be fetched cuz no more values are matching
+    - returns the empty set and returns nothing (no more fucntion calling)
+
+7. NOW all these tables that were fethced according to condition having levels respectfully.
+    -  all those tables of all levels will be combined
+        usingg UNION
+
+
+======================================================================
+
+=====================================================================
+
+
+        **   JDBC   **
+
+
+- mouse Driver taking input from mouse and converting it into numeric value, so that we can hover mouse in X and Y axis of display
+
+- Similarly we need driver for the connectivity of JAVA and mysql
+
+
+TYPES of drivers in java:
+
+    1.  TYPE - 1    [ JDBC-ODBC BRIDGE DRIVER] 
+                - third party driver, which is installed externally
+
+    2.  TYPE - 2    [ NATIVE DRIVER ]
+                - Drivers written in navtive language
+                - problem is , these are not portable (diff native driver for diff machines )
+
+    3.  TYPE -  3   [ NETWORK DRIVER ]
+                - Driver installed on a Server
+                    [request is sent to driver then this driver sent req to mysql server]
+                - costly
+
+    4.  TYPE - 4    [DATABSE SPECIFIC DRIVER]
+                - Database drivier writter in same language as Database
+                - orcale etc makes language specific drivers for java and python
+                - example : python-connector-chain
+                - example : python-oracledb driver 
+                - exmaple : mysql-connector-j-8.0.32.jar   [we will use this]
+                            (its writter in java only)
+
+(we will use type 4 driver)
+
+
+
+
+------
+1. right click on project_name > built path > configure built path > libraries > add externam jars
+2. find and select the driver
+
+
+
+-----
+here its known as conection-object
+
+
+-------------------------------
+
+package jdbc_SQL;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+
+public class Program01 {
+
+	public static void main(String[] args) {
+		
+//						mysql port number is 3306
+//						give database name
+		final String URL = "jdbc:mysql://localhost:3306/classwork_db";
+		final String USERNAME = "root";
+		final String PASSWORD = "manager";
+		
+//		making connection object
+		try {
+			Connection connection = DriverManager.getConnection(URL,USERNAME,PASSWORD);
+			
+//			in python we have curson , here we have statement
+//			so create the object of statement
+			Statement statement = connection.createStatement();
+			
+//			execute returns boolean
+//			executeQuery returns result (Object of ResultSet class) 
+			ResultSet result = statement.executeQuery("select empno,ename,sal from emp");
+			
+//			print result will have the classname and hashcode , but we need individual values
+			
+			while(result.next()) {
+				int empno = result.getInt(1);
+				String name = result.getString(2);
+				double salary = result.getDouble(3);
+				
+				System.out.println(empno + "-" + name + "-" + salary);
+			}
+			
+			statement.close();
+			connection.close();
+
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}
+
+}
+
+
+-------------------------------
+------------------
+
+
+package jdbc_SQL;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+
+
+public class Program02 {
+
+	public static void main(String[] args) {
+
+		final String URL = "jdbc:mysql://localhost:3306/classwork_db";
+		final String USERNAME = "root";
+		final String PASSWORD = "manager";	
+
+
+		try(Connection connection = DriverManager.getConnection(URL,USERNAME,PASSWORD)){
+				
+			try(Statement statement = connection.createStatement()) {
+				
+				int empno = 8000;
+				String name = "JHON";
+				double salary = 2000;
+				
+				String sql = "INSERT INTO emp(empno,ename,sal) values("+empno+",'"+name+"',"+salary+")";
+				statement.executeUpdate(sql);
+			
+			}
+			
+		} catch(SQLException e){
+				e.printStackTrace();
+		}
+	}
+}
+--------------------
+
+
+in program 1
+
+here we have two problesm
+1. sql injection 
+2. string concat , is not a good way
+
+
+sql injection
+
+> select * from customer where email = "at@gmail.com" and password ='test' OR 1;
+
+- password dete time sql ki string query add kre and its able to fetch the data then its called SQL injection.
+
+[   String sql = "INSERT INTO emp(empno,ename,sal) values("+empno+",'"+name+"',"+salary+")";   ]
+
+==========
+> to avoid sql injection and string concatination 
+
+we use object of PreparedStatemtn class 
+
+
+
+
+package jdbc_SQL;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+
+
+
+
+
+
+public class Prog3 {
+
+	public static void main(String[] args) {
+		
+//						mysql port number is 3306
+//						give database name
+		final String URL = "jdbc:mysql://localhost:3306/classwork_db";
+		final String USERNAME = "root";
+		final String PASSWORD = "manager";
+		
+//		making connection object
+		try {
+			Connection connection = DriverManager.getConnection(URL,USERNAME,PASSWORD);
+			
+			PreparedStatement statement = connection.prepareCall("select empno,ename,sal from emp where empno = ?");
+			statement.setInt(1, 7839);
+			
+			ResultSet result = statement.executeQuery();
+			
+			
+			while(result.next()) {
+				int empno = result.getInt(1);
+				String name = result.getString(2);
+				double salary = result.getDouble(3);
+				
+				System.out.println(empno + "-" + name + "-" + salary);
+			}
+			
+			statement.close();
+			connection.close();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}
+
+}
+
+
+-------------------------
+
+--  delete
+
+package jdbc_SQL;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+// delete operation
+
+public class Prog5 {
+
+	public static void main(String[] args) {
+
+		final String URL = "jdbc:mysql://localhost:3306/classwork_db";
+		final String USERNAME = "root";
+		final String PASSWORD = "manager";	
+
+
+		try(Connection connection = DriverManager.getConnection(URL,USERNAME,PASSWORD)){
+				
+			String sql = "delete from emp where empno = ?";
+			try(PreparedStatement statement = connection.prepareCall(sql)) {
+				
+				int empno = 8000;
+				
+				statement.setInt(1,empno);;
+				statement.executeUpdate();
+			
+				
+			}
+			
+		} catch(SQLException e){
+				e.printStackTrace();
+		}
+	}
+}
+
+------------------------------------------
+
+
+
+
