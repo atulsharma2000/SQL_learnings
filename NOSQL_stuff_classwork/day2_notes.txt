@@ -1,0 +1,314 @@
+>> mongo --version
+
+>> mongo
+
+>> mongosh
+
+
+========================================
+
+dbda> db.student.insertMany([
+    ... {name :"Sanjay" , roll :  22 },
+    ... {name :  "ajay" , std : 5},
+    ... {name : "vijay", class : "D"}
+    ... ])
+    {
+      acknowledged: true,
+      insertedIds: {
+        '0': ObjectId('674d367c673a4bc980e9496e'),
+        '1': ObjectId('674d367c673a4bc980e9496f'),
+        '2': ObjectId('674d367c673a4bc980e94970')
+      }
+    }
+    dbda> db.student.find()
+    [
+      {
+        _id: ObjectId('674d340d673a4bc980e9496c'),
+        name: 'ayush',
+        standard: 8,
+        class: '8',
+        roll: 3
+      },
+      {
+        _id: ObjectId('674d356d673a4bc980e9496d'),
+        name: 'jayesh',
+        standard: 5,
+        class: 'C',
+        roll: 3,
+        mobile: '90123144'
+      },
+      {
+        _id: ObjectId('674d367c673a4bc980e9496e'),
+        name: 'Sanjay',
+        roll: 22
+      },
+      { _id: ObjectId('674d367c673a4bc980e9496f'), name: 'ajay', std: 5 },
+      {
+        _id: ObjectId('674d367c673a4bc980e94970'),
+        name: 'vijay',
+        class: 'D'
+      }
+    ]
+
+    =========================================
+
+
+db.person.insertMany([
+  {nane :  'person1' , address: 'address 1',email: 'person1@test.com'},
+  {nane :  'person2' , address: 'address 2',email: 'person2@test.com'},
+  {nane :  'person3' , address: 'address 3',email: 'person3@test.com'},
+  {nane :  'person4' , address: 'address 4',email: 'person4@test.com'},
+  {nane :  'person5' , address: 'address 5',email: 'person5@test.com'},
+  {nane :  'person6' , address: 'address 6',email: 'person6@test.com'},
+  {nane :  'person7' , address: 'address 7',email: 'person7@test.com'},
+  {nane :  'person8' , address: 'address 8',email: 'person8@test.com'},
+  {nane :  'person9' , address: 'address 9',email: 'person9@test.com'},
+  {nane :  'person10' , address: 'address 10',email: 'person10@test.com'},
+  {nane :  'person11' , address: 'address 11',email: 'person11@test.com'},
+  {nane :  'person12' , address: 'address 12',email: 'person12@test.com'},
+  {nane :  'person13' , address: 'address 13',email: 'person13@test.com'},
+  {nane :  'person14' , address: 'address 14',email: 'person14@test.com'},
+  {nane :  'person15' , address: 'address 15',email: 'person15@test.com'},
+  {nane :  'person16' , address: 'address 16',email: 'person16@test.com'},
+  {nane :  'person17' , address: 'address 17',email: 'person17@test.com'},
+  {nane :  'person18' , address: 'address 18',email: 'person18@test.com'},
+  {nane :  'person19' , address: 'address 19',email: 'person19@test.com'},
+  {nane :  'person20' , address: 'address 20',email: 'person20@test.com'},
+  {nane :  'person21' , address: 'address 21',email: 'person21@test.com'},
+  {nane :  'person22' , address: 'address 22',email: 'person22@test.com'},
+  {nane :  'person23' , address: 'address 23',email: 'person23@test.com'},
+  {nane :  'person24' , address: 'address 24',email: 'person24@test.com'},
+  {nane :  'person25' , address: 'address 25',email: 'person25@test.com'},
+])
+
+this shows on 20 records
+
+
+==========================
+
+
+
+
+// show record 6 to 10
+
+
+===================
+
+test> load ('/home/atul/Desktop/Code_vs_code/dataset_nosql/empdept.js')
+
+
+test> show collections
+dept
+emp
+person
+test> db.dept.find()
+[
+  { _id: 10, dname: 'ACCOUNTING', loc: 'NEW YORK' },
+  { _id: 20, dname: 'RESEARCH', loc: 'DALLAS' },
+  { _id: 30, dname: 'SALES', loc: 'CHICAGO' },
+  { _id: 40, dname: 'OPERATIONS', loc: 'BOSTON' }
+]
+test>
+
+=====================================================
+
+
+1. list all emps order by ename asc
+test> db.emp.find().sort({ename:1})
+
+
+2. order by dpetno in desc
+test> db.emp.find().sort({deptno:-1})
+
+3. list emp order by sal
+test> db.emp.find().sort({sal:-1})
+
+4. list all eps order by dept no asc and salary in desc
+test> db.emp.find().sort({deptno:1,sal:-1})
+
+5. Highest salary emp
+test> db.emp.find().sort({sal:-1}).limit(1)
+[
+  { _id: 7839, ename: 'KING', job: 'PRESIDENT', sal: 5000, deptno: 10 }
+]
+
+
+6. find the top 3 paying employees
+
+test> db.emp.find().sort({sal:-1}).limit(3)
+
+
+7. find the emp who is getting the lowest sal
+test> db.emp.find().sort({sal:1}).limit(1)
+[
+  {
+    _id: 7369,
+    ename: 'SMITH',
+    job: 'CLERK',
+    mgr: 7902,
+    sal: 800,
+    deptno: 20
+  }
+]
+
+
+
+8. find the top 3 lowest playing emps
+
+
+
+===============================
+  
+  Projecttion 
+
+
+1. find all emp with name and depno
+
+test> db.emp.find({},{ename: 1 ,deptno:1, _id : 0 }) 
+[
+  { ename: 'SMITH', deptno: 20 },
+  { ename: 'ALLEN', deptno: 30 },
+  { ename: 'WARD', deptno: 30 },
+  { ename: 'JONES', deptno: 20 },
+  { ename: 'MARTIN', deptno: 30 },
+  { ename: 'BLAKE', deptno: 30 },
+  { ename: 'CLARK', deptno: 10 },
+  { ename: 'SCOTT', deptno: 20 },
+  { ename: 'KING', deptno: 10 },
+  { ename: 'TURNER', deptno: 30 },
+  { ename: 'ADAMS', deptno: 20 },
+  { ename: 'JAMES', deptno: 30 },
+  { ename: 'FORD', deptno: 20 },
+  { ename: 'MILLER', deptno: 10 }
+]
+
+
+2. fiind all emp with enmae and job
+
+test> db.emp.find({},{ename: 1 ,job:1, _id : 0 }) 
+[
+  { ename: 'SMITH', job: 'CLERK' },
+  { ename: 'ALLEN', job: 'SALESMAN' },
+  { ename: 'WARD', job: 'SALESMAN' },
+  { ename: 'JONES', job: 'MANAGER' },
+  { ename: 'MARTIN', job: 'SALESMAN' },
+  { ename: 'BLAKE', job: 'MANAGER' },
+  { ename: 'CLARK', job: 'MANAGER' },
+  { ename: 'SCOTT', job: 'ANALYST' },
+  { ename: 'KING', job: 'PRESIDENT' },
+  { ename: 'TURNER', job: 'SALESMAN' },
+  { ename: 'ADAMS', job: 'CLERK' },
+  { ename: 'JAMES', job: 'CLERK' },
+  { ename: 'FORD', job: 'ANALYST' },
+  { ename: 'MILLER', job: 'CLERK' }
+]
+
+
+3.  find all dept names
+
+test> db.dept.find({},{dname:1})
+[
+  { _id: 10, dname: 'ACCOUNTING' },
+  { _id: 20, dname: 'RESEARCH' },
+  { _id: 30, dname: 'SALES' },
+  { _id: 40, dname: 'OPERATIONS' }
+]
+
+test> db.dept.find({},{dname:1, _id : 0})
+[
+  { dname: 'ACCOUNTING' },
+  { dname: 'RESEARCH' },
+  { dname: 'SALES' },
+  { dname: 'OPERATIONS' }
+]
+
+4. exclude ename , deptno and show others
+
+test> db.emp.find({},{ename:0, dname:0, _id : 0})
+[
+  { job: 'CLERK', mgr: 7902, sal: 800, deptno: 20 },
+  { job: 'SALESMAN', mgr: 7698, sal: 1600, comm: 300, deptno: 30 },
+  { job: 'SALESMAN', mgr: 7698, sal: 1250, comm: 500, deptno: 30 },
+  { job: 'MANAGER', mgr: 7839, sal: 2975, deptno: 20, comm: null },
+  { job: 'SALESMAN', mgr: 7698, sal: 1250, comm: 1400, deptno: 30 },
+  { job: 'MANAGER', mgr: 7839, sal: 2850, deptno: 30 },
+  { job: 'MANAGER', mgr: 7839, sal: 2450, deptno: 10, comm: null },
+  { job: 'ANALYST', mgr: 7566, sal: 3000, deptno: 20 },
+  { job: 'PRESIDENT', sal: 5000, deptno: 10 },
+  { job: 'SALESMAN', mgr: 7698, sal: 1500, comm: 0, deptno: 30 },
+  { job: 'CLERK', mgr: 7788, sal: 1100, deptno: 20 },
+  { job: 'CLERK', mgr: 7698, sal: 950, deptno: 30, comm: null },
+  { job: 'ANALYST', mgr: 7566, sal: 3000, deptno: 20 },
+  { job: 'CLERK', mgr: 7782, sal: 1300, deptno: 10 }
+]
+
+5. show dname only in dept collection
+
+test> db.dept.find({},{_id:0, loc:0})
+[
+  { dname: 'ACCOUNTING' },
+  { dname: 'RESEARCH' },
+  { dname: 'SALES' },
+  { dname: 'OPERATIONS' }
+]
+
+
+===============================
+
+    selection 
+
+test> db.emp.find({ename : 'KING'})
+[
+  { _id: 7839, ename: 'KING', job: 'PRESIDENT', sal: 5000, deptno: 10 }
+]
+
+or
+
+test> db.emp.find({ ename : {$eq : "KING"}})
+  [
+    { _id: 7839, ename: 'KING', job: 'PRESIDENT', sal: 5000, deptno: 10 }
+  ]
+
+
+  Relational operators
+
+2. all ename but not equal to king
+test> db.emp.find( { ename : { $ne : "KING"} } )
+
+3. find all the clerks 
+test> db.emp.find({ job : { $eq : "CLERK"}})
+or
+test> db.emp.find({ job : "CLERK"})
+
+4. print emps having sal < 1000
+test> db.emp.find({sal : { $lte :  1000 }})
+
+5. department is not 30 
+test> db.emp.find( { deptno : { $ne : 30 }})
+
+6.find emp , who are manager or analyst
+test> db.emp.find( { job : { $in : ["MANAGER","ANALYST"] }})
+
+7.  find the emp who not manager or analyist
+test> db.emp.find({ job : { $nin : ["MANGER","ANALYST"] } } )
+
+
+  logical operators
+
+1. find th eemp gaving sal between 900 to 1300
+test> db.emp.find({
+  $and:[
+    {sal:{$gt:900}},
+    {sal:{$lt:1300}}
+  ]
+})
+
+
+
+2. find all the clerks in dept 20 
+
+test> db.emp.find( { $and : [ 
+... { job : "CLERK" },
+... {deptno : 20 }
+... ]
+... })

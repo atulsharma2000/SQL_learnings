@@ -1,0 +1,93 @@
+create new collections , lookup work as left outer join
+
+we created newDept using old  collections
+
+out is the alst stage of the aggregaation pipeline
+
+
+in dbda collection
+-------------------
+db.dept.aggregate([
+  {
+      $lookup:
+      {
+          from : 'emp',
+          localField : '_id',
+          foreignField : 'deptno',
+          as: 'employees'
+      }
+  },
+  {
+      $out:'newDept'
+  }
+])
+
+----------------------
+
+        $unwind
+
+
+
+dbda> db.newDept.find({},{_id:0,'employees.ename': 1})
+
+[
+  {
+    employees: [ { ename: 'CLARK' }, { ename: 'KING' }, { ename: 'MILLER' } ]
+  },
+  {
+    employees: [
+      { ename: 'SMITH' },
+      { ename: 'SCOTT' },
+      { ename: 'ADAMS' },
+      { ename: 'FORD' }
+    ]
+  },
+  {
+    employees: [
+      { ename: 'ALLEN' },
+      { ename: 'WARD' },
+      { ename: 'MARTIN' },
+      { ename: 'BLAKE' },
+      { ename: 'TURNER' },
+      { ename: 'JAMES' }
+    ]
+  },
+  { employees: [] }
+]
+
+
+
+                                this is unwind
+so we have to do this       [embedded data model]
+
+
+db.newDept.aggregate([{
+    $unwind:'$employees'
+},
+{
+    $project : {
+        _id:0, dname:1, 'employees.ename': 1
+    }
+}])
+
+[
+  { dname: 'ACCOUNTING', employees: { ename: 'CLARK' } },
+  { dname: 'ACCOUNTING', employees: { ename: 'KING' } },
+  { dname: 'ACCOUNTING', employees: { ename: 'MILLER' } },
+  { dname: 'RESEARCH', employees: { ename: 'SMITH' } },
+  { dname: 'RESEARCH', employees: { ename: 'SCOTT' } },
+  { dname: 'RESEARCH', employees: { ename: 'ADAMS' } },
+  { dname: 'RESEARCH', employees: { ename: 'FORD' } },
+  { dname: 'SALES', employees: { ename: 'ALLEN' } },
+  { dname: 'SALES', employees: { ename: 'WARD' } },
+  { dname: 'SALES', employees: { ename: 'MARTIN' } },
+  { dname: 'SALES', employees: { ename: 'BLAKE' } },
+  { dname: 'SALES', employees: { ename: 'TURNER' } },
+  { dname: 'SALES', employees: { ename: 'JAMES' } }
+]
+
+
+
+----------------------------------------------
+
+

@@ -1,0 +1,543 @@
+1. find all employees  who are working in dept 30 or getting sal > 13000
+
+db.emp.find({
+    $or : [
+        {deptno: {$eq : 30} },
+        {sal : { $gt : 1300}}
+    ]
+})
+
+test> db.emp.find({ $or: [ { deptno: { $eq: 30 } }, { sal: { $gt: 1300 } }] }).count()
+11
+
+
+2. get dep and sal of king
+
+test> db.emp.find({ ename: {$eq: "KING" } },{ename:1,deptno:1,sal:1, _id:0})
+[ { ename: 'KING', sal: 5000, deptno: 10 } ]
+
+or
+
+test> db.emp.find({ ename:  "KING"  },{ename:1,deptno:1,sal:1, _id:0})
+[ { ename: 'KING', sal: 5000, deptno: 10 } ]
+
+
+3. find ename who is getting lowest sal in dept 30
+
+test> db.emp.find({ deptno : 30} , { ename:1 , _id:0} ).sort({sal:1}).limit(1)
+[ { ename: 'JAMES' } ]
+
+
+4. highest sal, ename who is working in dept 10
+
+test> db.emp.find({ deptno : {$eq : 10} },{ename : 1, sal:1, _id:1}).sort({sal:-1}).limit(1) 
+[ { _id: 7839, ename: 'KING', sal: 5000 } ]
+
+
+
+5.  find the emp where 'comm' attribute exists
+
+db.emp.find({comm : { $exists : true }})
+
+# because of flexible schema its important to know , if record has that attribute or not
+    # even is the value is not present but attribute is there then it willl show it
+
+
+6. find the enamee and comm who are getting valid (not null) commission
+
+
+test> db.emp.find({
+...     $and : [
+...     {comm : { $exists: true}},
+...     {comm : { $ne : null}}
+...     ]},{ename:1, comm:1, _id:0})
+[
+  { ename: 'ALLEN', comm: 300 },
+  { ename: 'WARD', comm: 500 },
+  { ename: 'MARTIN', comm: 1400 },
+  { ename: 'TURNER', comm: 0 }
+]
+
+
+
+7. find all ename, comm who are getting commision > 0
+
+db.emp.find(
+    {
+        $and : [
+            {comm: {$exists : true}},
+            {comm : { $ne : null }},
+            {comm : { $gt :0}},
+            
+        ]
+    },
+    {
+        ename:1 , comm:1 , _id:0
+    }
+)
+
+
+8.  find all emps havaing name ending with R.
+
+db.emp.find({
+    ename  : /R$/
+}, {ename:1})
+
+
+
+9. find all emps having name starting with A
+
+db.emp.find({
+    ename  : /^A/
+}, {ename:1})
+
+
+10. Find the employee having 'A' in their name
+
+test> db.emp.find({ ename: /A/ }, { ename: 1 })
+[
+  { _id: 7499, ename: 'ALLEN' },
+  { _id: 7521, ename: 'WARD' },
+  { _id: 7654, ename: 'MARTIN' },
+  { _id: 7698, ename: 'BLAKE' },
+  { _id: 7782, ename: 'CLARK' },
+  { _id: 7876, ename: 'ADAMS' },
+  { _id: 7900, ename: 'JAMES' }
+]
+
+
+test> db.emp.find({ ename: /.*A.*E/ }, { ename: 1 })
+[
+  { _id: 7499, ename: 'ALLEN' },
+  { _id: 7698, ename: 'BLAKE' },
+  { _id: 7900, ename: 'JAMES' }
+]
+
+---
+
+test> db.emp.find({ ename: /A.A/ }, { ename: 1 })
+[ { _id: 7876, ename: 'ADAMS' } ]
+
+---
+
+11.  find emp name having 'james'
+
+
+db.emp.find({ ename : "JAMES" },{ename:1, _id:1})
+
+db.emp.find({ ename : {$eq: "JAMES"} },{ename:1, _id:1})
+
+db.emp.find({ ename : /JAMES/ },{ename:1, _id:1})
+
+db.emp.find({ ename : { $regex : /JAMES/ }},{ename:1, _id:1})
+
+
+12. ignore the case and give james
+
+db.emp.find({ename : /James/i} , {ename :1})
+
+
+=======================
+
+Deletion
+
+1. delete docment where deptno  = 30  (delete the first one)
+
+test> db.emp.deleteOne({deptno : 30})
+{ acknowledged: true, deletedCount: 1 }
+
+
+2. delete all having dpetno 30
+
+test> db.emp.deleteMany({deptno : 30})
+{ acknowledged: true, deletedCount: 5 }
+
+
+3. delte all documnesrs who has comm field
+
+test> db.emp.deleteMany( { comm : { $exists : true  }})
+{ acknowledged: true, deletedCount: 2 }
+
+
+4. delete all documents 
+
+test> db.emp.deleteMany({})
+{ acknowledged: true, deletedCount: 6 }
+
+
+=============================
+
+
+    _id: ObjectId('674d4efac7fa145144e9496a'),
+    name: 'contact1',
+    email: 'c1@test.com'
+  
+
+Update(criterria , new value , upsert , multiple)
+
+
+1. update ename of contact 1
+
+# by this entire document is replaced by this 
+db.contacts.update({name: "contact1" , {email: "xyz@gmail.com"}})
+
+
+test> db.contacts.update({name: 'contact1' }, {$set:{email: 'xyz@gmail.com'}})
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+
+
+
+  
+    _id: ObjectId('674d4efac7fa145144e9496b'),
+    name: 'contact2',
+    phone: '1236548',
+
+
+2.  add the properties to existing object
+
+db.contacts.update({
+    name:"contact2"
+}, {
+    $set:{ename:'pgr@gmail.com'}
+})
+
+
+3.  update the contact 1 with phone number
+
+db.contacts.update({
+    name: "contact1"
+}, {
+    $set : {phone:"90910239"}
+})
+
+
+4. add email in contact 4
+
+db.contacts.update(
+    {
+        name:'contact4'
+    }, {
+        $set : {email : "cont4@gmail.com"}
+    }
+)
+
+
+5. update contact5 with email address  
+
+db.contacts.update({
+    name : "contact5"
+}, {
+    $set : {email: "cont5@gmail.com"}
+})
+
+contact 5 won't be created 
+
+
+6. upate or create if not existing
+
+
+        [in mongosh]
+
+db.contacts.update({
+    name : "contact6"
+}, {
+    $set : {email:"cont6@gmail.com"}
+}, {upsert : true})
+
+
+
+7. update all contatcs with address = pune
+
+[ default values are assigned from left to right , so make sure to make it false ]
+
+test> db.contacts.update({}, { $set: { address: 'pune' }}, false, true)
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+
+
+
+8. update all contacts with zipcode = 413041
+
+    [in mongo]
+> db.contacts.update({}, { $set : {zipcode: 413041}}, false,true)
+WriteResult({ "nMatched" : 5, "nUpserted" : 0, "nModified" : 5 })
+
+
+9. update all contacts with state and country
+
+test> db.contacts.updateMany({}, { $set : {state : "pune", country  : "India"}}, false,true) 
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 5,
+  modifiedCount: 5,
+  upsertedCount: 0
+}
+
+
+
+
+
+
+===============================
+    now in students collection
+
+1.  find the sutdent with hobbies as an array
+    [$type will check if the data type of collection matches with required type ]
+
+test> db.students.find({hobbies:{$type:'array'}})
+[
+  {
+    _id: 1,
+    name: 'Sachin',
+    hobbies: [ 'Programming', 'Teaching' ],
+    academics: [
+      { std: '10th', passing: 1998, marks: 78.66 },
+      { std: '12th', passing: 2000, marks: 77 },
+      { std: 'B.Sc.', passing: 2004, marks: 60 },
+      { std: 'M.Sc.', passing: 2008, marks: 59.2 }
+    ]
+  },
+  {
+    _id: 2,
+    name: 'Sameer',
+    hobbies: [ 'Programming' ],
+    academics: [
+      { std: '10th', passing: 1998, marks: 98 },
+      { std: '12th', passing: 2000, marks: 94 },
+      { std: 'B.E.', passing: 2004, marks: 75 }
+    ]
+  },
+  {
+    _id: 3,
+    name: 'Dinesh',
+    hobbies: [ 'Music', 'Sports', 'Drawing' ],
+    academics: [
+      { std: '10th', passing: 2004, marks: 65 },
+      { std: '12th', passing: 2006, marks: 64 },
+      { std: 'B.A.', passing: 2009, marks: 60 }
+    ]
+  }
+]
+
+
+
+
+2. find the student whoo are having hobbies length = 2 
+
+test> db.students.find({hobbies: {$size : 2}})
+[
+  {
+    _id: 1,
+    name: 'Sachin',
+    hobbies: [ 'Programming', 'Teaching' ],
+    academics: [
+      { std: '10th', passing: 1998, marks: 78.66 },
+      { std: '12th', passing: 2000, marks: 77 },
+      { std: 'B.Sc.', passing: 2004, marks: 60 },
+      { std: 'M.Sc.', passing: 2008, marks: 59.2 }
+    ]
+  }
+]
+
+
+3. find out the students who has the programming as one of the hobbies
+
+        [   $elementMatch   ]   single criteria
+
+db.students.find({
+    hobbies: {
+        $elemMatch: { $eq : "Programming"}
+    }
+}, {
+    name : 1 , hobbies:1 , _id:0
+})
+
+output
+  { name: 'Sachin', hobbies: [ 'Programming', 'Teaching' ] },
+  { name: 'Sameer', hobbies: [ 'Programming' ] }
+
+
+            and criteria
+
+4.  find students passed in 12th in year 2006
+
+                wrong likha h
+
+db.students.find({
+    academics : {
+        $elemMatch: { 
+            $and : [
+                {$eq : "12th"},
+                {passing : 2006}
+            ]
+            
+    }}
+}, {
+
+    name : 1 , hobbies:1 , _id:0
+})
+
+
+5.  10th class and marks less than 80
+
+
+test> db.students.find({
+atch : {
+            $and : [
+...     academics: {
+...         $elemMatch : {
+...             $and : [
+...                 {std: '10th'},
+...                 {marks : {$lt : 80}}
+...             ]
+...         }
+...     }
+... })
+[
+  {
+    _id: 1,
+    name: 'Sachin',
+    hobbies: [ 'Programming', 'Teaching' ],
+    academics: [
+      { std: '10th', passing: 1998, marks: 78.66 },
+      { std: '12th', passing: 2000, marks: 77 },
+      { std: 'B.Sc.', passing: 2004, marks: 60 },
+      { std: 'M.Sc.', passing: 2008, marks: 59.2 }
+    ]
+  },
+  {
+    _id: 3,
+    name: 'Dinesh',
+    hobbies: [ 'Music', 'Sports', 'Drawing' ],
+    academics: [
+      { std: '10th', passing: 2004, marks: 65 },
+      { std: '12th', passing: 2006, marks: 64 },
+      { std: 'B.A.', passing: 2009, marks: 60 }
+    ]
+  }
+]
+
+
+9. find all the studens having hobby as sports and Music
+
+db.students.find(
+    { $and : [
+            {hobbies :{$elemMatch {$eq : "Sports"}}},
+            {hobbies :{$elemMatch {$eq : "Music"}}}]},{})
+
+
+
+10.
+
+SyntaxError: Missing semicolon. (1:22)
+
+> db.students.find({
+...     hobbies:{$all:["Sports","Music"]}
+... },{
+...     name : 1 , hobbies:1 , _id:0
+... })
+{ "name" : "Dinesh", "hobbies" : [ "Music", "Sports", "Drawing" ] }
+> 
+
+
+
+11. 
+> db.students.find({
+...     hobbies: {$in : ["Teaching" , "Music"]}
+... },{
+...     name:1 , hobbies:1, _id:0
+... })
+{ "name" : "Sachin", "hobbies" : [ "Programming", "Teaching" ] }
+{ "name" : "Dinesh", "hobbies" : [ "Music", "Sports", "Drawing" ] }
+> 
+
+
+12. 
+
+> db.students.find({
+...     hobbies : {$nin: ["Programming"]}
+... },{
+...     name : 1 , hobbies:1 , _id : 0
+... })
+{ "name" : "Dinesh", "hobbies" : [ "Music", "Sports", "Drawing" ] }
+> 
+
+
+==================
+
+1.  display students for whom music is the 1st hobbby -> 0 th index
+
+ db.students.find({
+...     'hobbies.0' : {$eq: "Music"}  
+... }, {
+...     name : 1 , hobbies:1 , _id :0
+... })
+{ "name" : "Dinesh", "hobbies" : [ "Music", "Sports", "Drawing" ] }
+> 
+
+
+2. display the students form whom sports is the 2nd hobby > 1st index
+
+> db.students.find({
+...     'hobbies.1' : {$eq : "Sports"}
+... },{
+...     name : 1 , hobbies:1 , _id :0
+... })
+{ "name" : "Dinesh", "hobbies" : [ "Music", "Sports", "Drawing" ] }
+> 
+
+
+ [to insert in array ] - Push (it appends)
+
+3.
+
+> db.students.update({
+...     name : 'Sachin'
+... },{
+...     $push : {hobbies: "Cooking"}
+... })
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+
+
+4. update saching hobbies list andd singign
+
+> db.students.update({name : "Sachin"},{$push:{hobbies:"Singing"}})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+
+5. update saching hobbies list by adding programming
+
+>  db.students.update({name : "Sachin"},{$push:{hobbies:"Programming"}})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+> db.students.find().pretty()
+{
+        "_id" : 1,
+        "name" : "Sachin",
+        "hobbies" : [
+                "Programming",
+                "Teaching",
+                "Cooking",
+                "Singing",
+                "Programming"
+        ],
+
+    -> it already had Programming but replaced , so Push allow duplicate values
+
+so to avoid the duplication  - addToSet
+
+db.students.update({
+    
+})

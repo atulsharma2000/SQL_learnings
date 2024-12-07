@@ -1,0 +1,299 @@
+import csv in mongo
+
+-  header is acting as a key
+
+[-d  means database you want to insert in]
+    [-c means collection name u want to give]
+        [--type ]
+            [--headerline , means head will act as key for every record]
+
+terminal> mongoimport -d dbda -c books --type csv --headerline <path.csv>
+
+
+-----------------------------
+
+import json file mongo
+
+terminal> mongoimport -d dbda -c busstops <path.json>
+
+
+
+--------------------------------
+
+import js in mongo  
+
+> mongo dbda  <path/file.json>
+
+3 new json records added  (sales customers and orders)
+
+or
+> load (<path>)
+
+------------------------------------------
+---------------------------------------------------------
+
+                    (notebook me dekh)
+# Embedded data models
+
+# normalized data models
+    DBref() not supported in all the client server , so normalized is not much used
+
+===============================================================
+
+            INDEXing
+
+- fast search
+
+
+
+
+-------
+
+dbda> db.emp.find({job:"manager"}).explain()
+{
+  explainVersion: '1',
+  queryPlanner: {
+    namespace: 'dbda.emp',
+    indexFilterSet: false,
+    parsedQuery: { job: { '$eq': 'manager' } },
+    queryHash: '8FD14039',
+    planCacheKey: 'FAED74D0',
+    maxIndexedOrSolutionsReached: false,
+    maxIndexedAndSolutionsReached: false,
+    maxScansToExplodeReached: false,
+    winningPlan: {
+      stage: 'COLLSCAN',
+      filter: { job: { '$eq': 'manager' } },
+      direction: 'forward'
+    },
+    rejectedPlans: []
+  },
+  command: { find: 'emp', filter: { job: 'manager' }, '$db': 'dbda' },
+  serverInfo: {
+    host: 'atul-ROG-Strix-G531GT-G531GT',
+    port: 27017,
+    version: '5.0.30',
+    gitVersion: '966efda23d779a86c76c34e1b13e561d68f2bb37'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 104857600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 104857600,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600
+  },
+  ok: 1
+}
+
+
+
+here , 
+
+winningPlan: {
+      stage: 'COLLSCAN',
+
+
+this COLLSCAN is very slow 
+
+
+so do the index seraching 
+
+winningPlan :  IDHACK  (means that your query has chosen to use _id field index) 
+
+winningPlan : IDSCAN   (means your that query is using a regular index)
+
+it is just about query path optimization
+
+"_id"  is hashed index
+--------------------------------------------------
+
+    simple/Regular index
+
+1. create index on job
+
+dbda> db.emp.createIndex({job:1})
+
+dbda> db.emp.getIndexes()
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { job: 1 }, name: 'job_1' }
+]
+
+
+
+dbda> db.emp.find({job:1}).explain()
+
+ 
+stage: 'IXSCAN',
+
+--------------------------
+
+
+        composite index
+
+
+db.emp.createIndex({deptno:1 , job:1})
+
+
+db.emp.find({deptno : 1 , job : 1})
+
+
+db.emp.find({deptno:30,job: "manager"})
+
+
+--------------------------------
+
+        Uniqque Index 
+
+
+dbda> db.emp.createIndex({ename : 1 }, {unique:true})
+
+
+dbda> db.emp.find({ename : "KING" }).explain()
+
+
+now we can't add names which are already present in ename
+    [duplicate key error]
+
+------------------------------
+
+
+# Drop index 
+
+dbda> db.emp.dropIndex({job : 1})
+{ nIndexesWas: 4, ok: 1 }
+
+dbda> db.emp.getIndexes()
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { deptno: 1, job: 1 }, name: 'deptno_1_job_1' },
+  { v: 2, key: { ename: 1 }, name: 'ename_1', unique: true }
+]
+
+dbda> db.emp.dropIndex({deptno : 1, job:1})
+{ nIndexesWas: 3, ok: 1 }
+
+dbda> db.emp.getIndexes()
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { ename: 1 }, name: 'ename_1', unique: true }
+]
+
+dbda> db.emp.dropIndex({ename : 1})
+{ nIndexesWas: 2, ok: 1 }
+
+dbda> db.emp.dropIndex({_id : 1})
+MongoServerError[InvalidOptions]: cannot drop _id index
+        [we cant drop _id index] 
+
+
+--------------------------
+
+
+        TTL (time to live)  indexes
+
+
+
+-  works on some date time field
+
+[whats app disappearing]
+
+- new Date()  - current time
+
+db.test.insert( { _id : 1 , time : new Date()})
+
+db.test.find()
+
+
+db.ttl.insert({_id : 1, time : new Date() , msg: "msg 1"})
+
+db.ttl.insert({_id : 2, time : new Date() , msg: "msg 2"})
+
+db.ttl.insert({_id : 3, time : new Date() , msg: "msg 3"})
+
+
+
+==========================================
+
+        GEO Spatial Indexes
+
+-  GEO information is stored as GeoJson format 
+     website - [geojson.io]
+
+    type : POint  , line , polygon
+
+
+
+mongo geospatial indexes
+    - 2d index - legacy index (not used now)
+    - 2d sphere index -- newer indexes on GeroJson fields
+    - haystack index -- for smaller area
+
+mongo gepspatial operators
+    - $geoWithin >  find loca
+    - $geoInteresects > 
+    - $geoNear > find locations within a radius
+
+
+
+
+===============================================
+
+
+    # Capped collections
+
+
+- maintain recent logs
+- create capped collections to store logs having size 10240 and max count of logs 5
+
+
+here we create this collections in different way 
+
+[ name of collections = logs,  max history = 5 d]
+
+db.createCollection(
+    'logs',{
+        capped:true,
+        size: 10240,
+        max : 5
+    }
+)
+
+# can't change the size once declared
+
+# can't update with changd size of a document in a capped collection
+# but  if same size document then update is possible ! 
+
+
+
+-------------------------------------------------
+
+
+
+Create emp collection gaving following validator
+
+1 name = type : str
+2 age = type : name
+3 also age  > 18
+4 mobile : having 0 to 9 digit and its length  = 10
+
+--> regex: /^[0-9]{10}$/
+
+
+===========================================
+
+
+    Unstrictured data
+
+ 
+
+.files()   <- this have file details
+        like , _id , file_id ,  
+  
+
+
+
+GRID fs is used for big files 

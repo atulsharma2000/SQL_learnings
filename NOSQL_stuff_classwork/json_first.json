@@ -1,0 +1,101 @@
+// first name = sanju and last name = pawar
+
+{"first_name":"Sanju"}
+
+{"last_name":"pawar"}  // 2 objects 
+
+{"first_name":"Sanju","last_name":"pawar"}  // single object
+
+
+// name , age, married  (object )
+{
+    "name": "atul",
+    "age": 24,
+    "married": false
+}
+
+
+
+// language is array of c++,java,py,kotlin
+
+{
+    "language": {"c++","java","python","kotlin"}
+}
+
+
+// list the days in week in array  (arry of string)
+
+{
+    "days_in_week" : [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday"
+    ]
+}
+
+
+// name , age, married, mobile (2 vals)
+
+{
+    "name" : "atul",
+    "age" : 24,
+    "married" : false,
+    "mobile" : ["9090090","456456456"]
+}
+
+
+
+// look at the "array of objects" in contact 
+// phone number is considered as String
+
+{
+    "name" : "atul",
+    "age" : 24,
+    "married" : true,
+    "contact" : [
+        "mobile" : "9090909",
+        "email" : "atutut@gmail.com"
+    ]
+}
+
+
+// arrya of employee
+// its one record / document
+
+{
+    "employee": [
+        {
+            "name" : "Atul",
+            "age" : 24,
+            "married" : false,
+            "contact" : [
+                {"mobile" : "9090909"},
+                {"email" : "asdada@gmail.com"}
+            ]
+        },
+        {
+            "name" : "vijay",
+            "age" : 44,
+            "married" : true,
+            "contact" : [
+                {"mobile" : "129090909"},
+                {"email" : "ppasdada@gmail.com"}
+            ]
+        },  
+        {
+            "name" : "sff",
+            "age" : 23,
+            "married" : true,
+            "contact" : [
+                {"mobile" : "8891283"},
+                {"email" : "asdag@gmail.com"}
+            ]
+        },
+    ]
+}
+
+

@@ -1,0 +1,495 @@
+        Cassandra practical
+
+- 9042 is the default port for cassandra
+- cqlsh 6,   cassandra version 4.0.15
+
+- all commands are care insensitive
+- semicol is mandatory
+
+- ek baar me ek hi insert
+
+
+
+        [while creating key space]
+1. NetworkTopologyStrategy -> used in case of production datacenter
+2. SimpleStrategy -> not for production use
+
+-------------------
+
+# start casandra server in backgroud
+>cassandra
+
+# to get into cassandra shell
+>cqlsh
+
+
+#  to see keyspaces (databases)
+> desc keyspaces
+
+
+# creating own keyspace(database)
+> create keyspace db1 with replication= {'replication_factor':1,'class' : 'SimpleStrategy'};
+
+        or
+
+> create keyspace dbda with replication = {'replication_factor': 1 , 'class' : 'SimpleStrategy'};
+
+
+# remove the keyspace (database)
+> drop  keyspace db1;
+
+
+> use dbda; 
+
+# to see tables in dbda
+> desc tables;
+
+
+# create table in dbda
+> create table student(id int PRIMARY KEY , name text, marks float);
+
+cqlsh:dbda> desc tables;
+student
+
+
+# to see informtion and schema of the table
+cqlsh:dbda> desc student;
+
+CREATE TABLE dbda.student (
+    id int PRIMARY KEY,
+    marks float,
+    name text
+) WITH additional_write_policy = '99p'
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
+    AND cdc = false
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold': '32', 'min_threshold': '4'}
+    AND compression = {'chunk_length_in_kb': '16', 'class': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1.0
+    AND default_time_to_live = 0
+    AND extensions = {}
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair = 'BLOCKING'
+    AND speculative_retry = '99p';
+
+
+[ by default they made id as index key]
+
+
+# insert record
+> insert into student (id,name,marks) values(1,'Ganesh',90);
+
+cqlsh:dbda> select * from student;
+
+ id | marks | name
+----+-------+--------
+  1 |    90 | Ganesh
+
+
+
+# we have to insert one by one here
+cqlsh:dbda> insert into student (id,name,marks) values(2,'ashish',88);
+cqlsh:dbda> insert into student (id,name,marks) values(3,'amit',48);
+
+cqlsh:dbda> select * from student;
+
+ id | marks | name
+----+-------+--------
+  1 |    90 | Ganesh
+  2 |    88 | ashish
+  3 |    48 |   amit
+
+
+# show details of student having id =2
+> select  * from student where id = 2;
+
+
+# find student whose name is ashish
+
+cqlsh:dbda> select  * from student where name like 'ashish';
+InvalidRequest: Error from server: code=2200 [Invalid query] message="LIKE restriction is only supported on properly indexed columns. name LIKE 'ashish' is not valid."
+
+[ non index se search kia , toh error]
+
+to do this , we change the flag: [allow filltering]
+
+
+cqlsh:dbda> select  * from student where name = 'ashish' allow filtering;
+
+ id | marks | name
+----+-------+--------
+  2 |    88 | ashish
+
+(1 rows)
+cqlsh:dbda> select * from student where marks > 60 ALLOW FILTERING;
+
+ id | marks | name
+----+-------+--------
+  1 |    90 | Ganesh
+  2 |    88 | ashish
+
+(2 rows)
+
+
+---------------------
+
+# indexing a column
+> create index on student (name); 
+
+
+cqlsh:dbda> desc student;
+
+CREATE TABLE dbda.student (
+    id int PRIMARY KEY,
+    marks float,
+    name text
+) WITH additional_write_policy = '99p'
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
+    AND cdc = false
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold': '32', 'min_threshold': '4'}
+    AND compression = {'chunk_length_in_kb': '16', 'class': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1.0
+    AND default_time_to_live = 0
+    AND extensions = {}
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair = 'BLOCKING'
+    AND speculative_retry = '99p';
+
+CREATE INDEX student_name_idx ON dbda.student (name);
+
+
+> select * from student where name = 'ashish';
+
+ id | marks | name
+----+-------+--------
+  2 |    88 | ashish
+(1 rows)
+
+
+# delete index 
+> drop index student_name_idx;
+
+
+# update 
+> update student set marks = 95 where id = 1;
+
+
+# delete
+> delete from student where id = 1;
+
+[but deleting a row takes alot of time in the columns based database , beacuse data is stored in column format and it had to find and match all the columns with row number they gave  then remove it ] , so its not prefered to delete in column based database.
+Better remove whole partition (column)
+
+
+> truncate student;
+> drop table student; 
+
+-------------------------
+    cql > collections
+
+
+
+1. create a table employee to stores its information and it must have multiple emails
+
+> create table employee (id int primary key, name text, email set<text>);
+
+
+# insert in the table
+
+insert into employee (id,name,email) values(1, 'ashish' , {'ashihs9898@gmail.com', 'ashish@hotmail.com'});
+
+
+insert into employee (id,name,email) values(2, 'amit' ,{ 'amit123@yahoo.com', 'amit999@gmail.com'});
+
+
+
+cqlsh:dbda> select * from employee;
+
+ id | email                                          | name
+----+------------------------------------------------+--------
+  1 | {'ashihs9898@gmail.com', 'ashish@hotmail.com'} | ashish
+  2 |     {'amit123@yahoo.com', 'amit999@gmail.com'} |   amit
+
+
+
+
+# add a new col name department whith list<text> 
+> alter table employee add departments list<text>;
+
+
+[in sql its not prefrerable to ALter columns , here its good to alter it if you want]
+
+
+# now give dept names to ashisih and amit
+> update employee set departments = ['ADMIN','HR'] where id = 1;
+
+> update employee set departments = ['QA','OPS'] where id = 2;
+
+
+
+# one more column phoneNumber with key text value text (map)
+> alter table employee add phoneNumber map<text,text>;
+
+>
+update employee set phoneNumber = {'office' : '998923'} where id = 1;
+>
+update employee set phoneNumber = {'home' : '3231234'} where id = 1;
+
+
+>update employee set phoneNumber = {'office' : '981828312'} where id = 2;
+> update employee set phoneNumber = {'home' : '23443361'} where id = 2;
+
+
+=====================================================
+> sudo service cassandra stop
+
+
+
+        REDIS
+
+- used as IN memory buffer
+
+- its a key value type nosql database
+
+
+> redis-cli
+
+> keys *        [to see what key value pairs we have]
+
+> flushall      [to remave all the key val pairs] 
+
+
+--------
+
+> ping 
+> ping "awesome" 
+
+-----------
+
+
+> info    [ give all the info about redis ]
+
+
+# create key val pair
+
+127.0.0.1:6379> set user_name "Ajit"
+OK
+127.0.0.1:6379> set user_address "pune"
+OK
+127.0.0.1:6379> keys *
+1) "user_address"
+2) "user_name"
+
+
+--------------------
+
+
+> get user_name                  [gives the value for key user_name] 
+> get user_address        [givees the val for key user_address]
+
+
+
+
+> del user_name
+
+
+> flushall
+
+
+-----------------------
+# list in redis
+
+> lpush colors red      [ add from left - just like add first]
+
+> lpush colors green
+
+127.0.0.1:6379> lrange colors 0 2
+1) "green"
+2) "red"
+
+> rpush colors black
+
+127.0.0.1:6379> lrange colors 0 6
+1) "green"
+2) "red"
+3) "black"
+
+
+---------
+# to add multiple vals
+
+127.0.0.1:6379> rpush  user  user1 user2 user3 user4 user5
+
+127.0.0.1:6379> lrange user 0 10
+1) "user1"
+2) "user2"
+3) "user3"
+4) "user4"
+5) "user5"
+
+
+------------------------
+# to remove element
+
+> lpop user               [delete first element of list]
+
+> rpop user               [delete last elemet]
+
+
+------------------------
+# hashes like object in java or struct in c
+
+  [user is the key]
+> hset user:ajit username ajit address pune email ajit@gmail.com
+
+> hgetall user:ajit
+1) "username"
+2) "ajit"
+3) "address"
+4) "pune"
+5) "email"
+6) "ajit@gmail.com"
+
+
+> hget user:ajit address
+"pune"
+
+
+> hdel user:ajit address
+(integer) 1
+
+
+> del user:ajit
+(integer) 1
+
+> hgetall user:ajit
+(empty array)
+
+--------------------------------
+
+
+# set 
+-  unorderd collection of unique values
+
+
+> sadd fruits Cherry
+> sadd fruits Papaya
+> sadd fruits Apple
+
+ 
+> smembers fruits
+1) "Apple"
+2) "Papaya"
+3) "Cherry"
+
+        [to check set member]
+> sismember fruits grapes
+(integer) 0
+
+> sismember fruits Apple
+(integer) 1
+
+
+    [to delete from set]
+> srem fruits Papaya
+
+
+
+
+------------------------
+
+# sorted set
+
+- collections of unique vals  , the vals are sorted by scores
+
+# create a sorted set as countries with value japan having score =0
+> zadd countries 0 japan
+
+> zadd countries a india
+
+
+> zrange countries 0 5
+1) "japan"
+2) "india"
+
+[weight based sorting]
+
+
+[but is same weight then alphabetic older]
+
+> zrange countries 0 5
+1) "japan"
+2) "mauritius"
+3) "india"
+
+
+
+> zadd countries 1 afganistan
+
+> zrange countries 0 5
+1) "japan"
+2) "mauritius"
+3) "afganistan"
+4) "india"
+
+---------------------------
+
+
+               pub-sub architecture 
+
+      [publisher and subscriber architecture]
+
+
+> subcribe channel-1
+
+> publish channel-1 "hellow world"
+
+------------------------
+
+
+        # transactions
+
+
+#start transaciton
+
+> multi         [this starts a queque so that you can enter command and when you enter exec then it executes the command in fifo ]
+> set user_name ajit
+> set user_address pune
+> exec
+
+---
+127.0.0.1:6379> multi
+OK
+127.0.0.1:6379> set user_name ajit
+QUEUED
+127.0.0.1:6379> set user_address pune
+QUEUED
+127.0.0.1:6379> exec
+1) OK
+2) OK
+---
+
+
+# discard queue in between
+> discard
+
+
+------------------------
+
+
+        # Pipeline
+
+- send multipple commands to redis server on port 6379
+
+
+ubuntu>  echo -en "ping\r\n set mobile_model S3\r\n set mobile_price 2000\r\n" | nc localhost 6379
+

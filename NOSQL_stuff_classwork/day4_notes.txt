@@ -1,0 +1,645 @@
+db.students.update({
+    name : "Sachin"
+},{
+    $addToSet : {hobbies: "reading"}
+})
+
+-------------------
+
+
+db.students.update({
+    name : "Sachin"
+},{
+    $pull : {hobbies: "Programming"}
+})
+
+------------------
+
+    # adding 
+
+
+db.students.updateOne({
+    name : "Sachin"  
+},{
+    $addToSet:{
+        hobbies:{
+            $each : ['Programming', 'Swimming' , 'Music' , 'Sports']
+        }
+    }
+})
+
+
+----------------------------
+
+    # adding at position   position (0 to infi)
+
+db.students.updateOne({
+    name : "Sachin"  
+},{
+    $push:{
+        hobbies:{
+            $each : ["Drawing"],
+            $position : 3    
+
+        }
+    }
+})
+
+
+----------------------
+update by adding hobbie then SORT it
+
+
+db.students.update({
+    name: 'Sachin'
+}, {
+    $push : {
+        hobbies: {
+            $each  : ["Painting"],
+            $sort:1
+        }   
+    }
+})
+
+
+
+----- 
+not adding anything and sorting
+
+db.students.update({
+    name: 'Sachin'
+}, {
+    $push : {
+        hobbies: {
+            $each  : [],
+            $sort: 1
+        }   
+    }
+})
+
+
+-----------------------
+slice 
+
+    [see only first 3 hobies]
+
+
+
+db.students.update({
+    name: 'Sachin'
+}, {
+    $push : {
+        hobbies: {
+            $each  : [],
+            $slice: 3
+        }   
+    }
+})
+
+        use  -3 for slicing keep last 3
+
+------------------
+
+
+db.students.updateOne({
+    name : "Sachin"  
+},{
+    $addToSet:{
+        hobbies:{
+            $each : [ "a","b","c" ]
+        }
+    }
+})
+
+
+db.students.update({
+    name: 'Sachin'
+}, {
+    $push : {
+        hobbies: {
+            $each  : [],
+            $slice: -3
+        }   
+    }
+})
+    #  last 3 are kept , othere deleted
+
+
+--------------------------------
+
+
+db.students.updateOne({
+    name : "Sachin"  
+},{
+    $addToSet:{
+        hobbies:{
+            $each : [ 'Cooking', 'Drawing', 'Music' ]
+        }
+    }
+})
+
+
+
+=====================================================
+
+new collections > >>> persons
+
+db.persons.insert({
+    _id : 1,
+    name : 'Rahul',
+    age : 20
+})
+
+db.persons.insert({
+    _id : 2,
+    name : "Prashant",
+    age:40
+})
+
+db.persons.find()
+
+------------
+1.  increament age by 1 whoes id=2    ($inc)
+
+db.persons.update({
+    _id  : 2
+}, {
+    $inc : {age:1}
+})
+
+
+--------------
+2. decrement age by 1 whoes ID = 1
+        [basically increment by -1]
+
+db.persons.update({
+    _id:1
+}, {
+    $inc : {age : -1}
+})
+
+
+===============================================
+
+
+
+    ** Aggregation pipeline ** 
+
+
+- Collection of stages
+    - most famous feature of mongodb
+        [its only for the select purpose]
+
+- some stages are always used in the end
+
+
+
+1. sort based on sal 
+
+#  with out pipeline 
+> db.emp.find().sort({sal: -1})
+
+
+# with aggregating pipeline   [asec]=1
+db.emp.aggregate([
+    {
+        $sort:{sal:1}
+    }
+])
+
+
+-----------
+
+2.  sort  by deptno and job
+
+db.emp.aggregate([
+    {
+        $sort : {deptno : 1, job : 1}
+    }
+])
+
+--------------
+
+3. Projection
+
+
+dbda> db.emp.aggregate([
+...     {
+...         $project : {ename : 1 , sal : 1 , _id : 0}
+...     }
+... ])
+[
+  { ename: 'SMITH', sal: 800 },
+  { ename: 'ALLEN', sal: 1600 },
+  { ename: 'WARD', sal: 1250 },
+  { ename: 'JONES', sal: 2975 },
+  { ename: 'MARTIN', sal: 1250 },
+  { ename: 'BLAKE', sal: 2850 },
+  { ename: 'CLARK', sal: 2450 },
+  { ename: 'SCOTT', sal: 3000 },
+  { ename: 'KING', sal: 5000 },
+  { ename: 'TURNER', sal: 1500 },
+  { ename: 'ADAMS', sal: 1100 },
+  { ename: 'JAMES', sal: 950 },
+  { ename: 'FORD', sal: 3000 },
+  { ename: 'MILLER', sal: 1300 }
+]
+
+
+-----------------------------
+
+4. two stage pipeline  (sort and project)
+
+db.emp.aggregate([
+    {
+        $sort : {sal : 1}
+    },{
+        $project : {ename:1,sal:1,_id:0}
+    }
+])
+
+--------------------------------
+$limit - limits the number of drocuments passed to the enxt stage in pipeline
+
+5. highest sal
+
+db.emp.aggregate([
+    {
+        $sort : {sal:-1}
+    },{
+        $limit : 1
+    },{
+        $project : {ename : 1, sal : 1 , _id : 0}
+    }
+])
+
+--------------------------
+
+$addField - this stage ads new field (new column)
+        ( computed column )
+
+6. 
+
+db.emp.aggregate([
+    {
+        $addFields : {count : 1}
+    },
+    {   
+        $project : {ename :1 ,count : 1, _id : 0}
+    }
+])
+
+------------------
+
+7.  we have to add a document where comm is not present 
+    , also add a computed col for his final income
+
+stage1 : add a commingsion in all the filed with 
+    - zero if the comm does not exits or comm
+    - commission if it is present in the document
+stage2 : calculate total salary  => sal + comm
+
+stage3 :  project result with toal salary
+
+
+// commision : ifnull (if not null then put comm in commission else put 0 )
+
+
+dbda> db.emp.aggregate([ { $addFields: { commission: { $ifNull: ['$comm', 0] } } }, { $project: { ename: 1, commission: 1, _id: 0 } }] )
+
+[
+  { ename: 'SMITH', commission: 0 },
+  { ename: 'ALLEN', commission: 300 },
+  { ename: 'WARD', commission: 500 },
+  { ename: 'JONES', commission: 0 },
+  { ename: 'MARTIN', commission: 1400 },
+  { ename: 'BLAKE', commission: 0 },
+  { ename: 'CLARK', commission: 0 },
+  { ename: 'SCOTT', commission: 0 },
+  { ename: 'KING', commission: 0 },
+  { ename: 'TURNER', commission: 0 },
+  { ename: 'ADAMS', commission: 0 },
+  { ename: 'JAMES', commission: 0 },
+  { ename: 'FORD', commission: 0 },
+  { ename: 'MILLER', commission: 0 }
+
+
+
+
+db.emp.aggregate([
+    { $addFields: { commission: { $ifNull: ['$comm', 0] } } },
+    {
+        $addFields: {
+            totalSalary: {
+                $add : ['$sal', '$commission']
+            } 
+        }
+    },
+    {
+        $project : {ename : 1, commission: 1, totalSalary : 1, _id : 0}
+    }
+])
+
+
+  { ename: 'SMITH', commission: 0, totalSalary: 800 },
+  { ename: 'ALLEN', commission: 300, totalSalary: 1900 },
+  { ename: 'WARD', commission: 500, totalSalary: 1750 },
+  { ename: 'JONES', commission: 0, totalSalary: 2975 },
+  { ename: 'MARTIN', commission: 1400, totalSalary: 2650 },
+  { ename: 'BLAKE', commission: 0, totalSalary: 2850 },
+  { ename: 'CLARK', commission: 0, totalSalary: 2450 },
+  { ename: 'SCOTT', commission: 0, totalSalary: 3000 },
+  { ename: 'KING', commission: 0, totalSalary: 5000 },
+  { ename: 'TURNER', commission: 0, totalSalary: 1500 },
+  { ename: 'ADAMS', commission: 0, totalSalary: 1100 },
+  { ename: 'JAMES', commission: 0, totalSalary: 950 },
+  { ename: 'FORD', commission: 0, totalSalary: 3000 },
+  { ename: 'MILLER', commission: 0, totalSalary: 1300 }
+
+
+-------------------------------------------------
+
+
+$match  (aggregation)
+    - its a filtering , 
+
+
+1.  find all the emps working in dept 20
+
+# with out pipeline
+db.emp.find({deptno:20}, {ename:1, deptno:1})
+
+# with pipeline  ($match)
+
+db.emp.aggregate([
+    {
+        $match : {deptno : 20}
+    },
+    {
+        $project : {ename : 1 , deptno : 1, _id : 0}
+    }
+])
+
+
+2. deaplay all manager in dept 30
+
+
+db.emp.aggregate([
+    {
+        $match : {'deptno' : 30 , 'job': "MANAGER"}
+    },
+    {
+        $project : {ename : 1, deptno : 1, job:1}
+    }
+])
+
+
+===============================================
+
+                # operators
+
+stages: 
+
+- $group   > seperate in groups according to group key
+            - use _id field in the $group pipeline stage to set the [group key]. _id is mandatory.
+- $lookup 
+    - works as left outer join
+    - keywords we use
+        > from: the collection to join 
+        > localField:  name of the field in the current colelction
+        > foreignField : _id
+        > as :  name of the fielld where the data wil be added to the result
+
+- $out
+
+
+
+-----------------
+1. group
+
+db.emp.aggregate([
+    {
+        $group : {_id : '$deptno'}
+    }
+])
+
+    > [ { _id: 10 }, { _id: 20 }, { _id: 30 } ]
+        (we got key and value based on groups in deptno)
+
+
+
+2. first group the records by depptno and then get the sum of salaries 
+    _id in the $group operator specifies the group of clause
+
+
+db.emp.aggregate([
+    {
+        $group : {
+            _id : '$deptno',
+            sumOfsalary : {$sum : '$sal'}
+        }
+    }
+])
+
+output : 
+[
+  { _id: 20, sumOfsalary: 10875 },
+  { _id: 30, sumOfsalary: 9400 },
+  { _id: 10, sumOfsalary: 8750 }
+]
+
+
+
+3. 
+
+db.emp.aggregate([
+    {
+        $group : {
+            _id : '$deptno',
+            sumOfSalary : {$sum : '$sal'},
+            avgOfSalary : {$avg : '$sal'},
+            maxOfSalary : {$max : '$sal'},
+            minOfSalary : {$min : '$sal'}
+        }
+    }
+])
+
+
+
+4. Display everything above and the count of emp per dept
+
+db.emp.aggregate([
+    {
+        $group : {
+            _id : '$deptno',
+            sumOfSalary : {$sum : '$sal'},
+            avgOfSalary : {$avg : '$sal'},
+            maxOfSalary : {$max : '$sal'},
+            minOfSalary : {$min : '$sal'},
+            Count : {$sum : 1}
+        }
+    }
+])
+
+
+            [map and reduce]
+dbda> db.emp.aggregate([
+...     {
+...         $group : {
+...             _id : '$deptno',
+...             
+...             Count : {$sum : 1}
+...         }
+...     }
+... ])
+[ { _id: 20, Count: 5 }, { _id: 30, Count: 6 }, { _id: 10, Count: 3 } ]
+
+
+5. display the sum , avg , max and min count of sal per job
+
+
+db.emp.aggregate([
+    {
+        $group : {
+            _id : '$job',
+            sumOfSalary : {$sum : '$sal'},
+            avgOfSalary : {$avg : '$sal'},
+            maxOfSalary : {$max : '$sal'},
+            minOfSalary : {$min : '$sal'},
+            Count : {$sum : 1}
+        }
+    }
+])
+
+
+- aggregate also return cursor , just like find. 
+
+
+
+-------------------
+
+            $lookup
+
+emp > local collection (.  kar k call kr rhe) > deptno  (local field)
+dept > foreign collection  > _id   (foreign field)
+
+
+1. 
+
+db.emp.aggregate([
+    {
+        $lookup : {
+            from  : 'dept',
+            localField: 'deptno',
+            foreignField : '_id',
+            as : 'department'
+        }   
+    },
+    {
+        $project : {
+            ename : 1 , _id : 0, department :1
+        }
+    }
+])
+
+
+2. display the dept info and the list of empss working in the department
+
+
+
+db.dept.aggregate([
+    {
+        $lookup : {
+            from: 'emp',
+            localField : '_id',
+            foreignField : 'deptno',
+            as: 'department'  
+        }
+    },{
+        $project : {
+             _id : 1, 'department.ename' :1
+        }
+    }
+])
+
+
+
+----------------------------
+
+    $out
+
+1. 
+
+db.emp.aggregate([
+    {
+        $lookup: {
+            from : 'dept',
+            localField : 'deptno',
+            foreignField : '_id',
+            as : 'department'
+        }
+    },
+    {
+        $out : 'empWithDeptName'
+    }
+])
+
+dbda> show collections
+dept
+emp
+empWithDeptName
+restaurants
+
+
+
+2. 
+
+db.emp.aggregate([
+    {
+        $lookup: {
+            from : 'dept',
+            localField : 'deptno',
+            foreignField : '_id',
+            as : 'department'
+        }
+    },
+    {
+        $out : 'empWithDeptName'
+    }
+])
+
+
+
+
+-------------------------------------------------
+
+from pymongo import MongoClient
+
+
+# connect with ongo DB on port 271017
+client = MongoClient('mongodb://localhost:27017')
+
+
+# connect with database named as 'dbda'
+db = client['dbda']
+
+# connect with collection named as  'dbda'
+emp = db['emp']
+
+
+def getAllEmpInfo():
+    # Print all the employees data from emp collection
+    cursor = emp.find()
+
+
+    # Print all the employees data from emp collection
+
+    for e in cursor:
+        # print(e)
+        print(e['_id'],"-",e['ename'],"-",e['job'],"-",e['sal'])
+
+
+getAllEmpInfo()
+
+--------------------------
+
